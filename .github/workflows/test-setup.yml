@@ -48,8 +48,11 @@ jobs:
           $sc = Join-Path $sandbox '.gemini\config\sidecars'
           & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\enable-saved.ps1 -List
           if ($LASTEXITCODE -ne 0) { throw "list failed" }
+          $ErrorActionPreference = 'Continue'
           & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\enable-saved.ps1 -Name shahdara-ui,shahdara-dashboard 2>&1 | Out-String | Write-Host
-          if ($LASTEXITCODE -eq 0) { throw "conflict was not refused" }
+          $conflictCode = $LASTEXITCODE
+          $ErrorActionPreference = 'Stop'
+          if ($conflictCode -eq 0) { throw "conflict was not refused" }
           foreach ($n in @('offerpk-app-factory', 'shahdara-ui', 'shahdara-dashboard,shahdara-mobile-nav,shahdara-forms-qa')) {
             $args2 = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts\enable-saved.ps1', '-Name', $n, '-RestoreFiles', '-Force', '-DisableConflicts')
             & powershell @args2
