@@ -1,14 +1,20 @@
 <#
 .SYNOPSIS
-  antigravity-bootstrap: set up N parallel Antigravity agents (automations / sidecars) that continuously
-  improve ONE GitHub repository and push their work as PRs.
+  antigravity-bootstrap: set up N Antigravity agents that continuously improve ONE GitHub repository and
+  push their work as PRs.
+  -Mode team     (default) ONE orchestrator automation; agents take turns agent1 -> agent2 -> ... -> agent1.
+                 Each turn is a long complete task (min -MinTurnMinutes, until the PR is merged). A small gate
+                 script starts a new run only when no run is active, so schedule ticks never interrupt work.
+  -Mode parallel one automation per agent, staggered schedules, per-agent lock file (agents run at the same time).
 
 .DESCRIPTION
   Creates  %USERPROFILE%\ag-projects\<repo-name>\  with:
     AGENTS.md, GEMINI.md, .agent\rules\, STATE.md, project.json
     agent1..agentN\  (own clone of the repo + TASK.md, STATE_agentN.md, GEMINI.md, .agent\rules\)
-  Creates one Antigravity sidecar per agent in  %USERPROFILE%\.gemini\config\sidecars\<name>\sidecar.json
-  with staggered schedules and a per-agent lock file.
+  team mode:     one sidecar <repo>-team + TEAM.md, TEAM_PROMPT.txt, team-gate.ps1, NEXT_AGENT.txt, TEAM_STATE.md
+  parallel mode: one sidecar per agent with staggered schedules and a per-agent lock file.
+  Sidecars go to  %USERPROFILE%\.gemini\config\sidecars\<name>\sidecar.json . Switching mode disables (renames)
+  the other mode's sidecars of this project, so they never run together.
   Adds a GitHub MCP server to  %USERPROFILE%\.gemini\config\mcp_config.json  ONLY if none exists
   (backup first, token is never printed).
 
@@ -18,11 +24,14 @@
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/me/my-app -Agents 3
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/me/my-app -Mode parallel
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)][string]$RepoUrl,
   [ValidateRange(1, 6)][int]$Agents = 3,
+  [ValidateSet('team', 'parallel')][string]$Mode = 'team',
+  [ValidateRange(5, 180)][int]$MinTurnMinutes = 20,
   [ValidateRange(5, 60)][int]$IntervalMinutes = 10,
   [ValidateRange(10, 240)][int]$LockMinutes = 40,
   [string]$CronTimeZone = 'UTC',
@@ -144,6 +153,10 @@ $Slug = "$Owner/$RepoName"
 $CloneUrl = "https://github.com/$Slug"
 
 $HomeDir = Get-HomeDir
+if ($Mode -eq 'team') {
+  if (-not $PSBoundParameters.ContainsKey('LockMinutes')) { $LockMinutes = 90 }
+  if (-not $PSBoundParameters.ContainsKey('IntervalMinutes')) { $IntervalMinutes = 5 }
+}
 if (-not $ProjectsRoot) { $ProjectsRoot = Join-Path $HomeDir 'ag-projects' }
 if (-not $GeminiConfigDir) { $GeminiConfigDir = Join-Path (Join-Path $HomeDir '.gemini') 'config' }
 $ProjectDir = Join-Path $ProjectsRoot $RepoName
@@ -156,7 +169,8 @@ New-Item -ItemType Directory -Path $script:BackupDir -Force | Out-Null
 
 Say "== antigravity-bootstrap"
 Say "   repo:     $CloneUrl"
-Say "   agents:   $Agents (every $IntervalMinutes min, staggered; lock $LockMinutes min)"
+if ($Mode -eq 'team') { Say "   mode:     team - $Agents agents take turns (one run at a time, min $MinTurnMinutes min per turn; gate every $IntervalMinutes min; lock $LockMinutes min)" }
+else { Say "   mode:     parallel - $Agents agents (every $IntervalMinutes min, staggered; lock $LockMinutes min)" }
 Say "   project:  $ProjectDir"
 Say "   sidecars: $SidecarRoot"
 if (-not (Test-Path -LiteralPath $GeminiConfigDir)) { Warn "$GeminiConfigDir does not exist yet. Is Antigravity installed and started at least once? It will be created." }
@@ -195,6 +209,8 @@ $roles = @(
 $safeRepo = ($RepoName.ToLower() -replace '[^a-z0-9-]+', '-').Trim('-')
 if ($safeRepo.Length -gt 30) { $safeRepo = $safeRepo.Substring(0, 30).Trim('-') }
 
+$TeamId = "$safeRepo-team"
+$TeamLock = Join-Path $ProjectDir 'TEAM.lock'
 $agentList = @()
 for ($n = 1; $n -le $Agents; $n++) {
   if ($n -le 3) { $r = $roles[$n - 1] } else { $r = @{ key = 'gen'; title = 'General improvements (docs, performance, refactors)'; prefix = "feat/a$n-"; tpl = 'TASK_generic.md' } }
@@ -203,7 +219,7 @@ for ($n = 1; $n -le $Agents; $n++) {
     N = $n; Key = $r.key; Title = $r.title; Prefix = $r.prefix; Tpl = $r.tpl
     Id = "$safeRepo-a$n-$($r.key)"
     Dir = $dir; RepoDir = (Join-Path $dir $RepoName)
-    State = (Join-Path $dir "STATE_agent$n.md"); Lock = (Join-Path $dir 'RUNNING.lock')
+    State = (Join-Path $dir "STATE_agent$n.md"); Lock = $(if ($Mode -eq 'team') { $TeamLock } else { Join-Path $dir 'RUNNING.lock' })
   }
 }
 
@@ -305,6 +321,11 @@ if ($found) {
 
 # ---------------------------------------------------------------- 4. project files
 Say "== 4. project files"
+$PrevMode = $null
+$pjOld = Join-Path $ProjectDir 'project.json'
+if (Test-Path -LiteralPath $pjOld) { try { $po = [IO.File]::ReadAllText($pjOld) | ConvertFrom-Json; if ($po.PSObject.Properties['mode']) { $PrevMode = [string]$po.mode } else { $PrevMode = 'parallel' } } catch { $PrevMode = $null } }
+$KeepMode = 'keep'
+if ($PrevMode -and $PrevMode -ne $Mode) { $KeepMode = 'always'; Say "  mode changed $PrevMode -> $Mode : AGENTS.md and TASK.md are rewritten (backups in $script:BackupDir)" }
 $setupTime = Get-Date -Format 'yyyy-MM-dd HH:mm zzz'
 $listLines = @()
 foreach ($a in $agentList) { $listLines += ("  - agent$($a.N) $($a.Id) -> $($a.RepoDir) (branches $($a.Prefix)*): $($a.Title)") }
@@ -312,10 +333,27 @@ $common = @{
   REPO_URL = $CloneUrl; REPO_SLUG = $Slug; REPO_NAME = $RepoName; OWNER_LOWER = $Owner.ToLower()
   PROJECT_DIR = $ProjectDir; AGENT_COUNT = $Agents; DEFAULT_BRANCH = $DefaultBranch
   TEST_CMD = $TestCommand; LOCK_MINUTES = $LockMinutes; MCP_GITHUB = $McpName; SETUP_TIME = $setupTime
+  TEAM_ID = $TeamId; TEAM_LOCK = $TeamLock; MIN_TURN_MINUTES = $MinTurnMinutes
+  AGENT_ORDER = ((@($agentList | ForEach-Object { "agent$($_.N)" }) + 'agent1') -join ' -> ')
+}
+if ($Mode -eq 'team') {
+  $common['MODE_TITLE'] = "$Agents agents taking turns ONE AT A TIME via the $TeamId orchestrator - see TEAM.md"
+  $common['MODE_LINE'] = "$Agents agents, each with its OWN clone, work one after another ($($common['AGENT_ORDER']) ...):"
+  $common['PR_RULE'] = "Each agent turn = ONE substantial feature/screen implemented completely (minimum $MinTurnMinutes minutes; keep going until it is merged). No tiny edits."
+  $common['LOOP_LOCK'] = "Lock: handled by the $TeamId orchestrator ($TeamLock + TEAM.md). Heartbeat it after every step."
+  $common['LOOP_WORK'] = "Implement ONE substantial feature/screen of your area COMPLETELY (code, UI, wiring, tests). Minimum $MinTurnMinutes minutes; if it is not finished by then, keep going until it is merged."
+  $common['LOOP_END'] = "Then hand off to the next agent as described in TEAM.md."
+} else {
+  $common['MODE_TITLE'] = "$Agents parallel agents"
+  $common['MODE_LINE'] = "$Agents agents work at the same time, each in its OWN clone:"
+  $common['PR_RULE'] = "Small focused PRs (one improvement each)."
+  $common['LOOP_LOCK'] = "Lock: if the lock file in TASK.md exists and was modified less than $LockMinutes minutes ago, another run of you is active: stop immediately. Otherwise write the current time into it (Set-Content). Touch it after every step."
+  $common['LOOP_WORK'] = "Make ONE focused improvement in your area. Add or adjust tests for it."
+  $common['LOOP_END'] = "Then delete your lock file and finish."
 }
 $m1 = $common.Clone(); $m1['AGENT_LIST'] = ($listLines -join "`n")
 $agentsMd = Expand-Template (Get-Template 'AGENTS.md') $m1
-Save-File (Join-Path $ProjectDir 'AGENTS.md') $agentsMd 'keep'
+Save-File (Join-Path $ProjectDir 'AGENTS.md') $agentsMd $KeepMode
 $agentsMdNow = [IO.File]::ReadAllText((Join-Path $ProjectDir 'AGENTS.md'))
 Save-File (Join-Path $ProjectDir 'GEMINI.md') $agentsMdNow
 Save-File (Join-Path (Join-Path (Join-Path $ProjectDir '.agent') 'rules') 'project-only.md') $agentsMdNow
@@ -340,7 +378,7 @@ foreach ($a in $agentList) {
   $map['SCHEDULE'] = $cron; $map['WORKSPACE_URI'] = ConvertTo-FileUri $a.Dir
   $map['LOOP'] = Expand-Template $loopTpl $map
 
-  Save-File (Join-Path $a.Dir 'TASK.md') (Expand-Template (Get-Template $a.Tpl) $map) 'keep'
+  Save-File (Join-Path $a.Dir 'TASK.md') (Expand-Template (Get-Template $a.Tpl) $map) $KeepMode
   Save-File $a.State (Expand-Template (Get-Template 'STATE_agent.md') $map) 'keep'
   $gm = $map.Clone(); $gm['AGENTS_MD'] = $agentsMdNow.TrimEnd()
   $gemini = Expand-Template (Get-Template 'GEMINI.md') $gm
@@ -348,6 +386,12 @@ foreach ($a in $agentList) {
   Save-File (Join-Path (Join-Path (Join-Path $a.Dir '.agent') 'rules') ("agent$($a.N).md")) $gemini
 
   $json = Expand-Template $sidecarTpl $map -Json
+  if ($Mode -eq 'team') {
+    if ($a.N -eq 1) { $script:TeamGrantSource = $json }
+    $pp = Join-Path (Join-Path $SidecarRoot $a.Id) 'sidecar.json'
+    if (Test-Path -LiteralPath $pp) { Backup-File $pp; Move-Item -LiteralPath $pp -Destination ($pp + '.disabled') -Force; Say "  disabled $($a.Id) (parallel sidecar; team mode is active)" }
+    continue
+  }
   try { $obj = $json | ConvertFrom-Json } catch { throw "Generated sidecar JSON for $($a.Id) is invalid: $_" }
   if ($obj.builtin -ne 'schedule' -or @($obj.args).Count -lt 4) { throw "Generated sidecar for $($a.Id) failed sanity check." }
   $scPath = Join-Path (Join-Path $SidecarRoot $a.Id) 'sidecar.json'
@@ -364,9 +408,56 @@ foreach ($a in $agentList) {
   $created += $a.Id
 }
 
+$script:SidecarIds = @($agentList | ForEach-Object { $_.Id })
+if ($Mode -eq 'team') {
+  Say "== 5b. team orchestrator ($TeamId)"
+  $tm = $common.Clone(); $tm['AGENT_LIST'] = ($listLines -join "`n")
+  Save-File (Join-Path $ProjectDir 'TEAM.md') (Expand-Template (Get-Template 'TEAM.md') $tm)
+  Save-File (Join-Path $ProjectDir 'TEAM_PROMPT.txt') (Expand-Template (Get-Template 'TEAM_PROMPT.txt') $tm)
+  Save-File (Join-Path $ProjectDir 'team-gate.ps1') (Expand-Template (Get-Template 'team-gate.ps1') $tm)
+  Save-File (Join-Path $ProjectDir 'NEXT_AGENT.txt') "agent1" 'keep'
+  Save-File (Join-Path $ProjectDir 'TEAM_STATE.md') "# TEAM STATE - $TeamId ($($common['AGENT_ORDER']))`n- $setupTime : setup. Each turn: min $MinTurnMinutes min, until the feature is merged.`n" 'keep'
+
+  $src = $script:TeamGrantSource | ConvertFrom-Json
+  $grants = New-Object System.Collections.Generic.List[string]
+  foreach ($g in @($src.agent_permissions.access_grants)) { if ($g -notmatch '^write_file\(' -and $g -notmatch '^command\(Remove-Item ' -and -not $grants.Contains($g)) { $grants.Add([string]$g) } }
+  $extra = @("write_file($ProjectDir)", 'command(Get-Date)', 'command(Get-Item)', "command(Remove-Item $TeamLock)")
+  foreach ($a in $agentList) { $extra += "command(Remove-Item $(Join-Path $a.Dir 'RUNNING.lock'))" }
+  foreach ($g in $extra) { if (-not $grants.Contains($g)) { $grants.Add($g) } }
+  $uris = @(ConvertTo-FileUri $ProjectDir) + @($agentList | ForEach-Object { ConvertTo-FileUri $_.Dir })
+  $cron = "*/$IntervalMinutes * * * *"; if ($CronTimeZone) { $cron = "CRON_TZ=$CronTimeZone $cron" }
+  $psExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+  if (-not $env:SystemRoot) { $psExe = 'powershell.exe' }
+  $teamObj = [ordered]@{
+    builtin = 'schedule'
+    restart_policy = 'always'
+    args = @($cron, $psExe, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $ProjectDir 'team-gate.ps1'))
+    description = "$TeamId : ONE orchestrator for $Slug. Agents take turns $($common['AGENT_ORDER']). Every $IntervalMinutes min team-gate.ps1 starts a run ONLY if TEAM.lock is absent or older than $LockMinutes min, so ticks never interrupt an active run. Each turn: min $MinTurnMinutes min, until the PR is merged. Created by antigravity-bootstrap."
+    display_name = $TeamId
+    agent_permissions = [ordered]@{ workspace_uris = $uris; access_grants = $grants.ToArray() }
+  }
+  $tjson = $teamObj | ConvertTo-Json -Depth 6
+  $null = $tjson | ConvertFrom-Json
+  $scPath = Join-Path (Join-Path $SidecarRoot $TeamId) 'sidecar.json'
+  if ((Test-Path -LiteralPath ($scPath + '.disabled')) -and -not (Test-Path -LiteralPath $scPath) -and -not $Force) {
+    Say "  disabled $TeamId (sidecar.json.disabled exists; use -Force to re-enable)"
+  } else {
+    Save-File $scPath $tjson
+    $bytes = [IO.File]::ReadAllBytes($scPath)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) { throw "BOM found in $scPath" }
+    $null = [IO.File]::ReadAllText($scPath) | ConvertFrom-Json
+    Say ("  sidecar  {0}  cron='{1}'  grants={2}  json=valid bom=no" -f $TeamId, $cron, $grants.Count)
+    $created += $TeamId
+  }
+  $script:SidecarIds = @($TeamId)
+} else {
+  $tp = Join-Path (Join-Path $SidecarRoot $TeamId) 'sidecar.json'
+  if (Test-Path -LiteralPath $tp) { Backup-File $tp; Move-Item -LiteralPath $tp -Destination ($tp + '.disabled') -Force; Say "  disabled $TeamId (team sidecar; parallel mode is active)" }
+}
+
 $proj = [pscustomobject]@{
-  repo = $CloneUrl; slug = $Slug; defaultBranch = $DefaultBranch; agents = $Agents; intervalMinutes = $IntervalMinutes
-  lockMinutes = $LockMinutes; testCommand = $TestCommand; mcpServer = $McpName; sidecars = @($agentList | ForEach-Object { $_.Id })
+  repo = $CloneUrl; slug = $Slug; defaultBranch = $DefaultBranch; agents = $Agents; mode = $Mode; minTurnMinutes = $MinTurnMinutes; intervalMinutes = $IntervalMinutes
+  lockMinutes = $LockMinutes; testCommand = $TestCommand; mcpServer = $McpName; sidecars = $script:SidecarIds; agentIds = @($agentList | ForEach-Object { $_.Id }); teamSidecar = $TeamId
   projectDir = $ProjectDir; sidecarRoot = $SidecarRoot
 }
 Save-File (Join-Path $ProjectDir 'project.json') ($proj | ConvertTo-Json -Depth 5)

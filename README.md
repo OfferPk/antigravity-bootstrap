@@ -7,7 +7,8 @@ Turn **any GitHub repo** into a project that several **Antigravity** agents impr
 ## What it does
 - Creates `%USERPROFILE%\ag-projects\<repo>\` with one folder and one **own clone** per agent (`agent1`, `agent2`, `agent3` by default).
 - Writes shared rules (`AGENTS.md`, `GEMINI.md`, `.agent\rules\`) and a role + loop for each agent (`TASK.md`, `STATE_agentN.md`) **outside** the repo, so nothing agent-related is committed.
-- Creates one Antigravity automation (sidecar) per agent with **staggered schedules** and a **per-agent lock file**, so agents never block each other.
+- **Default `-Mode team`:** creates ONE Antigravity automation that runs the agents **one after another** (agent1 -> agent2 -> agent3 -> agent1 ...). Each turn is a long, complete task (min 20 min, until its PR is merged). A tiny gate script only starts a new run when none is active, so schedule ticks never interrupt work.
+- `-Mode parallel`: one automation per agent with **staggered schedules** and a **per-agent lock file** (all agents at the same time).
 - Adds the **GitHub MCP server** to Antigravity if it is not there yet (backup first, token never printed).
 - Every agent: branch from latest main -> one focused change -> tests 100% -> rebase -> push -> PR -> merge only when tests + CI are green. Never force-pushes main, never touches other repos.
 
@@ -42,13 +43,13 @@ Want a different number of agents? Add `with 2 agents` (1-6).
 git clone https://github.com/OfferPk/antigravity-bootstrap %USERPROFILE%\ag-projects\_bootstrap
 powershell -NoProfile -ExecutionPolicy Bypass -File %USERPROFILE%\ag-projects\_bootstrap\scripts\setup.ps1 -RepoUrl https://github.com/YOUR-NAME/YOUR-REPO -Agents 3
 ```
-Options: `-Agents 1..6`, `-IntervalMinutes 10`, `-LockMinutes 40`, `-CronTimeZone UTC`, `-TestCommand "npm test"`, `-AskToken`, `-SkipMcp`, `-Force`.
+Options: `-Mode team|parallel` (default team), `-MinTurnMinutes 20`, `-Agents 1..6`, `-IntervalMinutes 10`, `-LockMinutes 40`, `-CronTimeZone UTC`, `-TestCommand "npm test"`, `-AskToken`, `-SkipMcp`, `-Force`.
 Safe to run again (idempotent). Overwritten files are backed up to `<project>\_backup_<time>\`.
 
 Stop the agents: `powershell -NoProfile -ExecutionPolicy Bypass -File %USERPROFILE%\ag-projects\_bootstrap\scripts\disable.ps1 -RepoName YOUR-REPO`, then restart Antigravity (nothing is deleted).
 
 ## Saved automations (John's)
-All of John's Antigravity automations (offerpk-app-factory, shahdara-ui, and the 3 Shahdara agents) are saved in `saved-automations/` and can be turned on again with `scripts/enable-saved.ps1`. Which automation does what, plus the cloud ones (GitHub Actions fb-autopost, Grok routines, dashboard): **[AUTOMATIONS_GUIDE.md](AUTOMATIONS_GUIDE.md)**.
+All of John's Antigravity automations (offerpk-app-factory, shahdara-ui, shahdara-team, and the 3 parallel Shahdara agents) are saved in `saved-automations/` and can be turned on again with `scripts/enable-saved.ps1`. Which automation does what, plus the cloud ones (GitHub Actions fb-autopost, Grok routines, dashboard): **[AUTOMATIONS_GUIDE.md](AUTOMATIONS_GUIDE.md)**.
 
 ## Repo contents
 | Path | Purpose |
@@ -59,7 +60,7 @@ All of John's Antigravity automations (offerpk-app-factory, shahdara-ui, and the
 | `scripts/enable-saved.ps1` | Turns a saved automation from `saved-automations/` back on |
 | `saved-automations/` | Saved copies of John's automations |
 | `AUTOMATIONS_GUIDE.md` | Guide to every automation (Roman Urdu + English) |
-| `templates/` | `AGENTS.md`, `TASK_agent1..3.md`, `TASK_generic.md`, `LOOP.md`, `STATE_agent.md`, `GEMINI.md`, `sidecar.template.json` |
+| `templates/` | `AGENTS.md`, `TASK_agent1..3.md`, `TASK_generic.md`, `LOOP.md`, `STATE_agent.md`, `GEMINI.md`, `sidecar.template.json`, team mode: `TEAM.md`, `TEAM_PROMPT.txt`, `team-gate.ps1` |
 
 ## Limitations
 - All agents use **your one Gemini/Antigravity quota**; 3 agents use it up ~3x faster. Start with 2 if you hit limits.

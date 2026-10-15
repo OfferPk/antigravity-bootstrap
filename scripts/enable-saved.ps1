@@ -34,7 +34,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $SavedOwnerHome = 'C:\Users\Perfect'
-$Known = @('offerpk-app-factory', 'shahdara-ui', 'shahdara-dashboard', 'shahdara-mobile-nav', 'shahdara-forms-qa')
+$Known = @('offerpk-app-factory', 'shahdara-ui', 'shahdara-team', 'shahdara-dashboard', 'shahdara-mobile-nav', 'shahdara-forms-qa')
 
 $HomeDir = $env:USERPROFILE; if (-not $HomeDir) { $HomeDir = [Environment]::GetFolderPath('UserProfile') }
 if (-not $GeminiConfigDir) { $GeminiConfigDir = Join-Path (Join-Path $HomeDir '.gemini') 'config' }

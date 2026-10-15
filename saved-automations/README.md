@@ -6,4 +6,5 @@ See [../AUTOMATIONS_GUIDE.md](../AUTOMATIONS_GUIDE.md) for what each one does an
 
 - `offerpk-app-factory` - offline game factory (original .bak4 copy, not reconstructed)
 - `shahdara-ui` - single UI agent for shahdara-isp-billing (conflicts with the 3 agents)
-- `shahdara-dashboard`, `shahdara-mobile-nav`, `shahdara-forms-qa` - the 3 parallel Shahdara agents
+- `shahdara-team` - RECOMMENDED: one orchestrator, the 3 Shahdara agents take turns (agent1 -> agent2 -> agent3), each turn min 20 min until merged
+- `shahdara-dashboard`, `shahdara-mobile-nav`, `shahdara-forms-qa` - the 3 parallel Shahdara agents (old parallel mode; conflicts with shahdara-team)
