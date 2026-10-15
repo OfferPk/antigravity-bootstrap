@@ -29,7 +29,8 @@
   "conflictsWith": [
     "shahdara-dashboard",
     "shahdara-mobile-nav",
-    "shahdara-forms-qa"
+    "shahdara-forms-qa",
+    "shahdara-team"
   ],
   "notes": [
     "Do NOT run together with the 3 shahdara agents (same repo, same files).",

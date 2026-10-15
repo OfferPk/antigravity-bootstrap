@@ -13,7 +13,8 @@ Follow these steps in order. Be brief with the user, and do everything you can y
 ## Step 1 - Inputs
 1. Target repo URL (`https://github.com/<owner>/<repo>`). If the user did not give one, ASK for it and wait.
 2. Number of agents: default **3** (allowed 1-6). Use what the user asked for, if anything.
-3. Optional: interval in minutes between runs per agent (default 10; agents are staggered and skip a run while their lock is fresh).
+3. Mode: default **team** (one orchestrator automation; agents take turns, each turn a long complete task of at least 20 min until its PR is merged). Use `-Mode parallel` only if the user explicitly wants all agents running at the same time.
+4. Optional: `-MinTurnMinutes` (team, default 20) or `-IntervalMinutes` (parallel, default 10).
 
 ## Step 2 - Check prerequisites (one command each)
 - `git --version` (required; if missing tell the user to install Git for Windows from https://git-scm.com/download/win and stop)
@@ -33,7 +34,7 @@ If none of these exist, the user must either run `gh auth login`, or run the set
 ```
 powershell -NoProfile -ExecutionPolicy Bypass -File <USERPROFILE>\ag-projects\_bootstrap\scripts\setup.ps1 -RepoUrl <TARGET_REPO_URL> -Agents 3
 ```
-Optional flags: `-IntervalMinutes 10`, `-LockMinutes 40`, `-CronTimeZone Asia/Karachi` (default UTC; schedules are minute-based so the zone barely matters), `-TestCommand "npm test"`, `-SkipMcp`, `-Force` (overwrite edited TASK/AGENTS files, re-enable disabled agents; backups are made).
+Optional flags: `-Mode team|parallel` (default team), `-MinTurnMinutes 20`, `-IntervalMinutes` (team gate 5 / parallel 10), `-LockMinutes` (team 90 / parallel 40), `-CronTimeZone Asia/Karachi` (default UTC; schedules are minute-based so the zone barely matters), `-TestCommand "npm test"`, `-SkipMcp`, `-Force` (overwrite edited TASK/AGENTS files, re-enable disabled agents; backups are made).
 
 The script is idempotent (safe to run again), backs up every file it overwrites into `<project>\_backup_<time>\`, validates every JSON file and writes UTF-8 without BOM.
 It creates:

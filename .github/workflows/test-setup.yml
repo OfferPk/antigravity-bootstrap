@@ -22,8 +22,49 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "setup failed" }
           if ($out -match 'ci-dummy-token') { throw "token leaked to output" }
           $sc = Join-Path $sandbox '.gemini\config\sidecars'
+          $proj = Join-Path $sandbox 'ag-projects\antigravity-bootstrap'
+          # ---- default = team mode: exactly ONE orchestrator sidecar + gate files
           $files = @(Get-ChildItem $sc -Recurse -Filter sidecar.json)
-          if ($files.Count -ne 3) { throw "expected 3 sidecars, got $($files.Count)" }
+          if ($files.Count -ne 1) { throw "team mode: expected 1 sidecar, got $($files.Count)" }
+          foreach ($f in $files) {
+            $b = [IO.File]::ReadAllBytes($f.FullName)
+            if ($b[0] -eq 0xEF) { throw "BOM in $($f.FullName)" }
+            $j = Get-Content $f.FullName -Raw | ConvertFrom-Json
+            "$($j.display_name): $($j.args[0]) | $(@($j.agent_permissions.workspace_uris) -join ', ')"
+            if ($j.display_name -ne 'antigravity-bootstrap-team') { throw "unexpected team id $($j.display_name)" }
+            if (@($j.agent_permissions.workspace_uris).Count -ne 4) { throw "team sidecar must list project + 3 agent folders" }
+            foreach ($u in @($j.agent_permissions.workspace_uris)) { if ($u -notmatch '^file:///[A-Za-z]:/') { throw "bad workspace uri $u" } }
+            if ($j.args[-1] -notmatch 'team-gate\.ps1$') { throw "team sidecar must call team-gate.ps1" }
+          }
+          foreach ($n in 'TEAM.md','TEAM_PROMPT.txt','team-gate.ps1','NEXT_AGENT.txt','TEAM_STATE.md','AGENTS.md','agent1\TASK.md','agent3\TASK.md') {
+            $p = Join-Path $proj $n
+            if (-not (Test-Path $p)) { throw "missing $p" }
+            if ((Get-Content $p -Raw) -match '\{\{[A-Z0-9_]+\}\}') { throw "unresolved placeholder in $p" }
+          }
+          if ((Get-Content (Join-Path $proj 'AGENTS.md') -Raw) -notmatch 'ONE AT A TIME') { throw "AGENTS.md not in team wording" }
+          $errs = $null; $null = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $proj 'team-gate.ps1'), [ref]$null, [ref]$errs)
+          if ($errs.Count -gt 0) { throw "team-gate.ps1 parse errors: $($errs | Out-String)" }
+          # gate: fresh lock -> skip; no lock -> tries to start (agentapi missing in CI) and removes its lock again
+          $lock = Join-Path $proj 'TEAM.lock'
+          Set-Content $lock 'running ci' -Encoding ASCII
+          & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $proj 'team-gate.ps1')
+          if (-not (Select-String -Path (Join-Path $proj 'team-gate.log') -Pattern 'skip: TEAM.lock fresh' -Quiet)) { throw "gate did not skip on a fresh lock" }
+          if ((Get-Content $lock -Raw).Trim() -ne 'running ci') { throw "gate touched an active lock" }
+          Remove-Item $lock
+          & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $proj 'team-gate.ps1')
+          Get-Content (Join-Path $proj 'team-gate.log')
+          if (Test-Path $lock) { throw "gate left a lock after a failed start" }
+          $m = Get-Content (Join-Path $sandbox '.gemini\config\mcp_config.json') -Raw | ConvertFrom-Json
+          if (-not $m.mcpServers.other -or -not $m.mcpServers.github) { throw "mcp merge failed" }
+          $again = & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/OfferPk/antigravity-bootstrap -Agents 3 -SkipGitCredentialSetup 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "second run failed" }
+          if ($again -match 'created ') { $again; throw "second run was not idempotent" }
+          # ---- parallel mode: 3 sidecars, team sidecar disabled
+          $par = & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/OfferPk/antigravity-bootstrap -Agents 3 -Mode parallel -SkipGitCredentialSetup 2>&1 | Out-String
+          $par
+          if ($LASTEXITCODE -ne 0) { throw "parallel setup failed" }
+          $files = @(Get-ChildItem $sc -Recurse -Filter sidecar.json)
+          if ($files.Count -ne 3) { throw "parallel mode: expected 3 sidecars, got $($files.Count)" }
           foreach ($f in $files) {
             $b = [IO.File]::ReadAllBytes($f.FullName)
             if ($b[0] -eq 0xEF) { throw "BOM in $($f.FullName)" }
@@ -31,11 +72,7 @@ jobs:
             "$($j.display_name): $($j.args[0]) | $($j.agent_permissions.workspace_uris[0])"
             if ($j.agent_permissions.workspace_uris[0] -notmatch '^file:///[A-Za-z]:/') { throw "bad workspace uri" }
           }
-          $m = Get-Content (Join-Path $sandbox '.gemini\config\mcp_config.json') -Raw | ConvertFrom-Json
-          if (-not $m.mcpServers.other -or -not $m.mcpServers.github) { throw "mcp merge failed" }
-          $again = & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/OfferPk/antigravity-bootstrap -Agents 3 -SkipGitCredentialSetup 2>&1 | Out-String
-          if ($LASTEXITCODE -ne 0) { throw "second run failed" }
-          if ($again -match 'created ') { throw "second run was not idempotent" }
+          if (Test-Path (Join-Path $sc 'antigravity-bootstrap-team\sidecar.json')) { throw "team sidecar still active in parallel mode" }
           & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\disable.ps1 -RepoName antigravity-bootstrap
           if (@(Get-ChildItem $sc -Recurse -Filter sidecar.json).Count -ne 0) { throw "disable failed" }
           "OK"
@@ -68,6 +105,18 @@ jobs:
           }
           if (Test-Path (Join-Path $sc 'shahdara-ui\sidecar.json')) { throw "shahdara-ui should have been disabled by -DisableConflicts" }
           if (-not (Test-Path (Join-Path $sandbox 'app-factory\AUTOMATION_PROMPT.md'))) { throw "files not restored" }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\enable-saved.ps1 -Name shahdara-team -RestoreFiles -Force -DisableConflicts
+          if ($LASTEXITCODE -ne 0) { throw "enable shahdara-team failed" }
+          foreach ($n in 'shahdara-dashboard','shahdara-mobile-nav','shahdara-forms-qa') { if (Test-Path (Join-Path $sc "$n\sidecar.json")) { throw "$n should have been disabled by shahdara-team -DisableConflicts" } }
+          $traw = Get-Content (Join-Path $sc 'shahdara-team\sidecar.json') -Raw
+          if ($traw -match 'C:\\\\Users\\\\Perfect') { throw "path not rewritten in shahdara-team" }
+          $tj = $traw | ConvertFrom-Json
+          "shahdara-team -> $($tj.args[0]) | $(@($tj.agent_permissions.workspace_uris) -join ', ') | $($tj.args[-1])"
+          $gate = Join-Path $sandbox 'shahdara-project\team-gate.ps1'
+          if (-not (Test-Path $gate)) { throw "team-gate.ps1 not restored" }
+          if ((Get-Content $gate -Raw) -match 'C:\\Users\\Perfect') { throw "path not rewritten in team-gate.ps1" }
+          if ($tj.args[-1] -ne $gate) { throw "sidecar does not point to the restored gate ($($tj.args[-1]))" }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\disable.ps1 -Name shahdara-team
           & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\disable.ps1 -Name offerpk-app-factory,shahdara-dashboard
           if (Test-Path (Join-Path $sc 'offerpk-app-factory\sidecar.json')) { throw "disable -Name failed" }
           "OK"

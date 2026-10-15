@@ -27,10 +27,12 @@
     }
   ],
   "conflictsWith": [
-    "shahdara-ui"
+    "shahdara-ui",
+    "shahdara-team"
   ],
   "notes": [
     "Meant to run together with shahdara-dashboard and shahdara-forms-qa (different areas, branches and locks).",
-    "Never together with shahdara-ui."
+    "Never together with shahdara-ui.",
+    "Parallel mode. Never together with shahdara-team (the sequential orchestrator that replaced these 3 on 2026-10-15)."
   ]
 }
