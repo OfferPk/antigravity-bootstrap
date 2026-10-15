@@ -1,0 +1,29 @@
+{
+  "name": "offerpk-app-factory",
+  "displayName": "OfferPk App Factory",
+  "summary": "Offline game factory: builds one new offline casual game at a time (vanilla JS + Capacitor Android) as a new public OfferPk repo, with CI, GitHub Pages demo and APK artifact; when one is DONE it starts the next.",
+  "source": "Original copy of sidecar.json.bak4 + AUTOMATION_PROMPT.md.bak4 from John's PC (game-factory mode, before the 2026-10-15 Shahdara focus). Not reconstructed. The later Shahdara-billing version is kept in variants/ for history only.",
+  "schedule": "CRON_TZ=Asia/Karachi */5 * * * * (continuous; RUNNING.lock 40-min guard)",
+  "workspace": "{{USERPROFILE}}\\app-factory",
+  "files": [
+    {
+      "src": "AUTOMATION_PROMPT.md",
+      "dest": "{{USERPROFILE}}\\app-factory\\AUTOMATION_PROMPT.md"
+    },
+    {
+      "src": "STATE.games.md",
+      "dest": "{{USERPROFILE}}\\app-factory\\STATE.md"
+    }
+  ],
+  "folders": [
+    "{{USERPROFILE}}\\app-factory\\work"
+  ],
+  "clones": [],
+  "conflictsWith": [],
+  "notes": [
+    "It creates NEW repos itself (needs a GitHub MCP token with repo-create rights).",
+    "Today app-factory\\AUTOMATION_PROMPT.md and STATE.md contain the Shahdara-billing version: use -RestoreFiles -Force to switch them back to game mode (old files are backed up).",
+    "Old game folders were moved to app-factory\\work_old; the factory does not need them.",
+    "Do not run it at the same time as the Grok cloud routine 'Auto app factory' on the same repos."
+  ]
+}

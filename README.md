@@ -47,12 +47,18 @@ Safe to run again (idempotent). Overwritten files are backed up to `<project>\_b
 
 Stop the agents: `powershell -NoProfile -ExecutionPolicy Bypass -File %USERPROFILE%\ag-projects\_bootstrap\scripts\disable.ps1 -RepoName YOUR-REPO`, then restart Antigravity (nothing is deleted).
 
+## Saved automations (John's)
+All of John's Antigravity automations (offerpk-app-factory, shahdara-ui, and the 3 Shahdara agents) are saved in `saved-automations/` and can be turned on again with `scripts/enable-saved.ps1`. Which automation does what, plus the cloud ones (GitHub Actions fb-autopost, Grok routines, dashboard): **[AUTOMATIONS_GUIDE.md](AUTOMATIONS_GUIDE.md)**.
+
 ## Repo contents
 | Path | Purpose |
 |---|---|
 | `BOOTSTRAP.md` | Step-by-step instructions written for the Antigravity agent |
 | `scripts/setup.ps1` | Does the whole setup in one run (Windows PowerShell 5.1 / PowerShell 7) |
-| `scripts/disable.ps1` | Disables a project's automations (renames to `sidecar.json.disabled`) |
+| `scripts/disable.ps1` | Turns automations off (`-RepoName` or `-Name`; renames to `sidecar.json.disabled`) |
+| `scripts/enable-saved.ps1` | Turns a saved automation from `saved-automations/` back on |
+| `saved-automations/` | Saved copies of John's automations |
+| `AUTOMATIONS_GUIDE.md` | Guide to every automation (Roman Urdu + English) |
 | `templates/` | `AGENTS.md`, `TASK_agent1..3.md`, `TASK_generic.md`, `LOOP.md`, `STATE_agent.md`, `GEMINI.md`, `sidecar.template.json` |
 
 ## Limitations
@@ -96,4 +102,5 @@ Kam ya zyada agents chahiye to aakhir mein `with 2 agents` likh dein (1 se 6).
 - Saare agents aap ke ek hi Gemini quota se chalte hain, 3 agents quota jaldi khatam karte hain.
 - Agents sirf tab chalte hain jab PC on ho aur Antigravity khuli ho.
 - Agents tests pass hone par khud merge karte hain, is liye kabhi kabhi kaam check kar liya karein.
+- Saari automations ki guide (kaun si kya karti hai, kaise on/off): [AUTOMATIONS_GUIDE.md](AUTOMATIONS_GUIDE.md)
 - Band karna ho: `scripts\disable.ps1 -RepoName YOUR-REPO` chala kar Antigravity restart karein. Kuch delete nahi hota.

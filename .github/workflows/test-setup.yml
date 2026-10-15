@@ -39,3 +39,32 @@ jobs:
           & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\disable.ps1 -RepoName antigravity-bootstrap
           if (@(Get-ChildItem $sc -Recurse -Filter sidecar.json).Count -ne 0) { throw "disable failed" }
           "OK"
+      - name: Test enable-saved.ps1 / disable.ps1 -Name (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          $sandbox = Join-Path $env:RUNNER_TEMP 'home2'
+          New-Item -ItemType Directory -Path $sandbox -Force | Out-Null
+          $env:USERPROFILE = $sandbox
+          $sc = Join-Path $sandbox '.gemini\config\sidecars'
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\enable-saved.ps1 -List
+          if ($LASTEXITCODE -ne 0) { throw "list failed" }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\enable-saved.ps1 -Name shahdara-ui,shahdara-dashboard 2>&1 | Out-String | Write-Host
+          if ($LASTEXITCODE -eq 0) { throw "conflict was not refused" }
+          foreach ($n in @('offerpk-app-factory', 'shahdara-ui', 'shahdara-dashboard,shahdara-mobile-nav,shahdara-forms-qa')) {
+            $args2 = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'scripts\enable-saved.ps1', '-Name', $n, '-RestoreFiles', '-Force', '-DisableConflicts')
+            & powershell @args2
+            if ($LASTEXITCODE -ne 0) { throw "enable $n failed" }
+          }
+          foreach ($n in @('offerpk-app-factory', 'shahdara-dashboard', 'shahdara-mobile-nav', 'shahdara-forms-qa')) {
+            $p = Join-Path $sc "$n\sidecar.json"
+            $raw = Get-Content $p -Raw
+            if ($raw -match 'C:\\\\Users\\\\Perfect') { throw "path not rewritten in $n" }
+            $j = $raw | ConvertFrom-Json
+            "$n -> $($j.args[0]) | $($j.agent_permissions.workspace_uris[0])"
+            if ($j.agent_permissions.workspace_uris[0] -notmatch '^file:///[A-Za-z]:/') { throw "bad uri $n" }
+          }
+          if (Test-Path (Join-Path $sc 'shahdara-ui\sidecar.json')) { throw "shahdara-ui should have been disabled by -DisableConflicts" }
+          if (-not (Test-Path (Join-Path $sandbox 'app-factory\AUTOMATION_PROMPT.md'))) { throw "files not restored" }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\disable.ps1 -Name offerpk-app-factory,shahdara-dashboard
+          if (Test-Path (Join-Path $sc 'offerpk-app-factory\sidecar.json')) { throw "disable -Name failed" }
+          "OK"

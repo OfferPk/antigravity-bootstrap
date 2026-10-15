@@ -1,0 +1,38 @@
+{
+  "name": "shahdara-ui",
+  "displayName": "shahdara-ui",
+  "summary": "Single agent that continuously polishes the UI of OfferPk/shahdara-isp-billing (dashboard, cards, charts, dark/light, responsive), one PR at a time.",
+  "source": "Original copy of sidecars\\shahdara-ui\\sidecar.json.disabled + shahdara-project\\_backup_20261015-163130\\PROMPT.md / AGENTS.md from John's PC. Not reconstructed.",
+  "schedule": "CRON_TZ=Asia/Karachi */5 * * * * (continuous; shahdara-project\\RUNNING.lock 40-min guard)",
+  "workspace": "{{USERPROFILE}}\\shahdara-project",
+  "files": [
+    {
+      "src": "AGENTS.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\AGENTS.md"
+    },
+    {
+      "src": "PROMPT.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\PROMPT.md"
+    },
+    {
+      "src": "STATE.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\STATE.md"
+    }
+  ],
+  "folders": [],
+  "clones": [
+    {
+      "repo": "https://github.com/OfferPk/shahdara-isp-billing",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\shahdara-isp-billing"
+    }
+  ],
+  "conflictsWith": [
+    "shahdara-dashboard",
+    "shahdara-mobile-nav",
+    "shahdara-forms-qa"
+  ],
+  "notes": [
+    "Do NOT run together with the 3 shahdara agents (same repo, same files).",
+    "shahdara-project\\AGENTS.md and PROMPT.md currently hold the 3-agent version: use -RestoreFiles -Force to switch to the single-agent texts (old files are backed up)."
+  ]
+}
