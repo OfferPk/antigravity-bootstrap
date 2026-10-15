@@ -1,0 +1,41 @@
+name: test-setup
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  windows-powershell-5:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run setup.ps1 in a sandbox USERPROFILE (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          $sandbox = Join-Path $env:RUNNER_TEMP 'home'
+          New-Item -ItemType Directory -Path (Join-Path $sandbox '.gemini\config') -Force | Out-Null
+          '{"mcpServers":{"other":{"command":"cmd.exe","args":["/c","x"]}}}' | Set-Content -Path (Join-Path $sandbox '.gemini\config\mcp_config.json') -Encoding ASCII
+          $env:USERPROFILE = $sandbox
+          $env:GITHUB_PERSONAL_ACCESS_TOKEN = 'ci-dummy-token'
+          $out = & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/OfferPk/antigravity-bootstrap -Agents 3 -SkipGitCredentialSetup 2>&1 | Out-String
+          $out
+          if ($LASTEXITCODE -ne 0) { throw "setup failed" }
+          if ($out -match 'ci-dummy-token') { throw "token leaked to output" }
+          $sc = Join-Path $sandbox '.gemini\config\sidecars'
+          $files = @(Get-ChildItem $sc -Recurse -Filter sidecar.json)
+          if ($files.Count -ne 3) { throw "expected 3 sidecars, got $($files.Count)" }
+          foreach ($f in $files) {
+            $b = [IO.File]::ReadAllBytes($f.FullName)
+            if ($b[0] -eq 0xEF) { throw "BOM in $($f.FullName)" }
+            $j = Get-Content $f.FullName -Raw | ConvertFrom-Json
+            "$($j.display_name): $($j.args[0]) | $($j.agent_permissions.workspace_uris[0])"
+            if ($j.agent_permissions.workspace_uris[0] -notmatch '^file:///[A-Za-z]:/') { throw "bad workspace uri" }
+          }
+          $m = Get-Content (Join-Path $sandbox '.gemini\config\mcp_config.json') -Raw | ConvertFrom-Json
+          if (-not $m.mcpServers.other -or -not $m.mcpServers.github) { throw "mcp merge failed" }
+          $again = & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -RepoUrl https://github.com/OfferPk/antigravity-bootstrap -Agents 3 -SkipGitCredentialSetup 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "second run failed" }
+          if ($again -match 'created ') { throw "second run was not idempotent" }
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts\disable.ps1 -RepoName antigravity-bootstrap
+          if (@(Get-ChildItem $sc -Recurse -Filter sidecar.json).Count -ne 0) { throw "disable failed" }
+          "OK"
