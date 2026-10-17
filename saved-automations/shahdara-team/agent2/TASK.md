@@ -36,3 +36,9 @@ When the backlog is done: polish speed and usability of the billing flows on pho
 3. npm test 100% (never delete or weaken tests). git fetch origin, git rebase origin/main, npm test again.
 4. Push (or PUSH RULE in TEAM.md), PR via GitHub MCP (title prefix [agent2]), merge only when CI is green. Confirm Pages deploy.
 5. Update STATE_agent2.md: done, PR link, which backlog item number is next.
+
+## BROWSER VERIFICATION RULE (added 2026-10-17, all agents)
+- Unit tests are NOT enough. Before every PR, open your changed feature in a REAL browser at mobile 390x844 and desktop 1280x800 (Playwright `npx playwright test` / scripts, or rea MCP capture_browser_scenario / capture_web_screenshot on a local server or the Pages preview).
+- Check: it OPENS, every new button WORKS, it CLOSES (close / Esc / backdrop), Back works, and NO menu, FAB, toast, backdrop or overlay covers content when it should be closed. No horizontal scroll at 390px. Dark + light readable.
+- If tests/e2e/*.spec.mjs exists: add/extend an e2e test for your feature and keep `npx playwright test` green. Never skip or weaken e2e tests. Note in the PR what you verified in the browser.
+- PREFER ENHANCING EXISTING FEATURES over adding new ones. agent4 (shahdara-polish-qa) fixes and polishes existing features between your turns; do not undo its fixes (e.g. do not re-expand the speed-dial or add new items to it; new tools go into the grouped "More tools"/"Field Tools" page).
