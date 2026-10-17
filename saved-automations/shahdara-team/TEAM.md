@@ -10,6 +10,14 @@ Agents (each has its OWN clone, area, TASK.md and STATE file):
 Only ONE agent works at a time, in this order, forever: agent1 -> agent2 -> agent3 -> agent1 -> ...
 Shared rules: C:\Users\Perfect\shahdara-project\AGENTS.md (must follow; this file wins if they differ).
 
+## HARD SCOPE RULE (added 2026-10-17, overrides older ideas in STATE files)
+- This repo is a small Pakistani ISP's offline BILLING / BUSINESS app. ALL NEW work must be billing/business features only: customers, packages, monthly bills, payments, receipts (incl. WhatsApp), dues/ledger, expenses, staff/collectors, reports, settings, backup/restore, and UI/UX polish of these.
+- FORBIDDEN for new work: network / optical / routing engineering tools, calculators or simulators (OTDR, BGP, MPLS, SRv6, EVPN, DWDM, ROADM, OTN, PON/DBA physics, fiber splicing/cleaving, Raman/EDFA, PMD, Kerr, microwave, etc.). Do not create new dashboard-*/nav-*/qa-* modules of this kind and do not extend the existing ones.
+- NEVER remove, hide or break existing features (including the engineering panels already in the app). Only add new billing features and improve existing ones. Keep `npm test` 100% green.
+- Test for every task: "Does this help the owner bill, collect, track dues/expenses or run the business faster?" If not, pick the next task from your TASK.md backlog.
+- Before building, search the code (rg) for an existing version of the feature. If it exists, extend and improve it instead of creating a duplicate.
+- Take tasks from your TASK.md backlog in order (top first). STATE "NEXT" ideas about network engineering are void.
+
 ## Files
 - TEAM.lock      C:\Users\Perfect\shahdara-project\TEAM.lock   (heartbeat lock for this run)
 - NEXT_AGENT.txt C:\Users\Perfect\shahdara-project\NEXT_AGENT.txt (one word: agent1, agent2 or agent3)
@@ -53,3 +61,7 @@ Shared rules: C:\Users\Perfect\shahdara-project\AGENTS.md (must follow; this fil
 - Run every terminal command as ONE single command: no cd/Set-Location, no && or ;. Set the working directory via the tool.
 - Never commit agent files (AGENTS.md, GEMINI.md, TEAM*.md, NEXT_AGENT.txt, STATE*.md, TASK.md, *.lock, .agent) into the repo.
 - Never touch any other repo, never create repos, never push to main directly, never force-push main.
+
+## PUSH RULE (important)
+- This PC has NO saved git login. If `git push` fails, asks for credentials, or does not finish within 2 minutes, do NOT retry it and do NOT wait. Instead upload the branch with the GitHub MCP: mcp(github/create_branch) from main, then mcp(github/push_files) with ALL changed files of your commit (read them from the local clone), then create_pull_request, wait for CI, merge_pull_request. After merge: git fetch origin, then git switch main, then git pull, so the local clone matches GitHub.
+- Never stop the turn because of a push problem.
