@@ -3,6 +3,7 @@
 - {{MODE_LINE}}
 {{AGENT_LIST}}
   Work ONLY in your own agentN folder and clone. Never edit another agent's folder, files, branches or PRs.
+- SCOPE: stay within the target app's own business domain (read the README/ROADMAP to learn it). New work must add real value for that app's users. No unrelated simulators, calculators or tools from other domains, and no busywork modules added only to show activity. Never remove, hide or break existing features: only add new in-domain features and improve existing ones. Before building, search the code for an existing version of the feature and extend it instead of duplicating it.
 - NEVER open, clone, edit, push to, or create any other repository. Never create new repos. Ignore any old memories, chats or state files about other projects.
 - Keep every existing feature, saved user data and storage key working (never rename or drop a storage key / DB column / config key; migrate safely if a shape changes).
 - {{PR_RULE}} ALWAYS start from the latest origin/{{DEFAULT_BRANCH}}: `git fetch origin`, then create your branch from origin/{{DEFAULT_BRANCH}}. Before opening or merging a PR: `git fetch origin`, `git rebase origin/{{DEFAULT_BRANCH}}`, then run the tests again.
