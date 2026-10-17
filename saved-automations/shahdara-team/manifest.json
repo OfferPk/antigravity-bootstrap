@@ -1,32 +1,91 @@
 {
   "name": "shahdara-team",
   "displayName": "shahdara-team",
-  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing: agent1 dashboard -> agent2 mobile-nav -> agent3 forms-qa -> agent1 ..., one at a time, each turn min 20 min and until its PR is merged. Gate script: ticks never interrupt a run.",
-  "source": "Original copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (2026-10-15). Not reconstructed.",
+  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing, 6-slot rotation agent1 dashboard -> agent4 polish-qa -> agent2 mobile-nav -> agent4 -> agent3 forms-qa -> agent4 -> repeat, one at a time, each turn min 20 min and until its PR is merged. agent4 verifies and fixes existing features in a real browser (Playwright, 390x844 + 1280x800). Gate script: ticks never interrupt a run.",
+  "source": "Copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (updated 2026-10-17: agent4 polish-qa + browser verification rule). Not reconstructed.",
   "schedule": "CRON_TZ=Asia/Karachi every 5 min: team-gate.ps1 starts a new conversation ONLY if TEAM.lock is missing or older than 90 min (heartbeat after every step)",
   "workspace": "{{USERPROFILE}}\\shahdara-project",
   "files": [
-    { "src": "TEAM.md", "dest": "{{USERPROFILE}}\\shahdara-project\\TEAM.md" },
-    { "src": "TEAM_PROMPT.txt", "dest": "{{USERPROFILE}}\\shahdara-project\\TEAM_PROMPT.txt" },
-    { "src": "team-gate.ps1", "dest": "{{USERPROFILE}}\\shahdara-project\\team-gate.ps1" },
-    { "src": "NEXT_AGENT.txt", "dest": "{{USERPROFILE}}\\shahdara-project\\NEXT_AGENT.txt" },
-    { "src": "AGENTS.md", "dest": "{{USERPROFILE}}\\shahdara-project\\AGENTS.md" },
-    { "src": "agent1/TASK.md", "dest": "{{USERPROFILE}}\\shahdara-project\\agent1\\TASK.md" },
-    { "src": "agent2/TASK.md", "dest": "{{USERPROFILE}}\\shahdara-project\\agent2\\TASK.md" },
-    { "src": "agent3/TASK.md", "dest": "{{USERPROFILE}}\\shahdara-project\\agent3\\TASK.md" },
-    { "src": "../shahdara-dashboard/STATE_agent1.md", "dest": "{{USERPROFILE}}\\shahdara-project\\agent1\\STATE_agent1.md" },
-    { "src": "../shahdara-mobile-nav/STATE_agent2.md", "dest": "{{USERPROFILE}}\\shahdara-project\\agent2\\STATE_agent2.md" },
-    { "src": "../shahdara-forms-qa/STATE_agent3.md", "dest": "{{USERPROFILE}}\\shahdara-project\\agent3\\STATE_agent3.md" }
+    {
+      "src": "TEAM.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\TEAM.md"
+    },
+    {
+      "src": "TEAM_PROMPT.txt",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\TEAM_PROMPT.txt"
+    },
+    {
+      "src": "team-gate.ps1",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\team-gate.ps1"
+    },
+    {
+      "src": "NEXT_AGENT.txt",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\NEXT_AGENT.txt"
+    },
+    {
+      "src": "AGENTS.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\AGENTS.md"
+    },
+    {
+      "src": "agent1/TASK.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent1\\TASK.md"
+    },
+    {
+      "src": "agent2/TASK.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent2\\TASK.md"
+    },
+    {
+      "src": "agent3/TASK.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent3\\TASK.md"
+    },
+    {
+      "src": "../shahdara-dashboard/STATE_agent1.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent1\\STATE_agent1.md"
+    },
+    {
+      "src": "../shahdara-mobile-nav/STATE_agent2.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent2\\STATE_agent2.md"
+    },
+    {
+      "src": "../shahdara-forms-qa/STATE_agent3.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent3\\STATE_agent3.md"
+    },
+    {
+      "src": "agent4/TASK.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent4\\TASK.md"
+    },
+    {
+      "src": "agent4/STATE_agent4.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent4\\STATE_agent4.md"
+    },
+    {
+      "src": "agent4/FEATURE_AUDIT.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent4\\FEATURE_AUDIT.md"
+    }
   ],
   "folders": [
     "{{USERPROFILE}}\\shahdara-project\\agent1",
     "{{USERPROFILE}}\\shahdara-project\\agent2",
-    "{{USERPROFILE}}\\shahdara-project\\agent3"
+    "{{USERPROFILE}}\\shahdara-project\\agent3",
+    "{{USERPROFILE}}\\shahdara-project\\agent4"
   ],
   "clones": [
-    { "repo": "https://github.com/OfferPk/shahdara-isp-billing", "dest": "{{USERPROFILE}}\\shahdara-project\\agent1\\shahdara-isp-billing" },
-    { "repo": "https://github.com/OfferPk/shahdara-isp-billing", "dest": "{{USERPROFILE}}\\shahdara-project\\agent2\\shahdara-isp-billing" },
-    { "repo": "https://github.com/OfferPk/shahdara-isp-billing", "dest": "{{USERPROFILE}}\\shahdara-project\\agent3\\shahdara-isp-billing" }
+    {
+      "repo": "https://github.com/OfferPk/shahdara-isp-billing",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent1\\shahdara-isp-billing"
+    },
+    {
+      "repo": "https://github.com/OfferPk/shahdara-isp-billing",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent2\\shahdara-isp-billing"
+    },
+    {
+      "repo": "https://github.com/OfferPk/shahdara-isp-billing",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent3\\shahdara-isp-billing"
+    },
+    {
+      "repo": "https://github.com/OfferPk/shahdara-isp-billing",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent4\\shahdara-isp-billing"
+    }
   ],
   "conflictsWith": [
     "shahdara-ui",
@@ -37,6 +96,7 @@
   "notes": [
     "Recommended Shahdara setup (sequential). Replaces the 3 parallel agents: never run it together with them or with shahdara-ui.",
     "Gate log: shahdara-project\\team-gate.log. To restart a stuck cycle at once: delete shahdara-project\\TEAM.lock.",
-    "Turn order is stored in shahdara-project\\NEXT_AGENT.txt (agent1/agent2/agent3); per-turn log in TEAM_STATE.md."
+    "Turn order: 6-slot rotation in TEAM.md; shahdara-project\\NEXT_AGENT.txt holds '<slot> <agent>' (e.g. '2 agent4'); per-turn log in TEAM_STATE.md.",
+    "agent4 (shahdara-polish-qa) keeps agent4\\FEATURE_AUDIT.md (Works/Broken/Ugly per button) and adds Playwright e2e tests (tests/e2e/*.spec.mjs) + a CI e2e job. Covered by the existing sidecar grants (command(npx), command(npm), command(node), write_file on shahdara-project); no sidecar change needed."
   ]
 }
