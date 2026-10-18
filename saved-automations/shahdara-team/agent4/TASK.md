@@ -19,7 +19,7 @@ The owner (John) opened the app and says it is NOT fully functional: strange fun
 
 ## Step 0 - EVERY turn, FIRST: grok-review issues (highest priority)
 - Grok reviews the live app (https://offerpk.github.io/shahdara-isp-billing/) every 2 hours and files GitHub issues in OfferPk/shahdara-isp-billing labeled `grok-review`.
-- At the START of every turn, list the OPEN issues labeled grok-review (GitHub MCP list_issues with labels=["grok-review"], state=OPEN, or search_issues `repo:OfferPk/shahdara-isp-billing is:issue is:open label:grok-review`). Read each with issue_read.
+- At the START of every turn, list the OPEN issues labeled grok-review (GitHub MCP list_issues with labels=["grok-review"] and the open state value that tool accepts (e.g. "open" or "OPEN"; if one is rejected use the other), or search_issues `repo:OfferPk/shahdara-isp-billing is:issue is:open label:grok-review`). Read each with issue_read.
 - Add each one to FEATURE_AUDIT.md (Section/Item/Selector from the issue, Status Broken/Partial/Ugly, Problem found = `grok-review #N: <title>`), if it is not there already.
 - Fix them FIRST, highest impact first (app crashes / blocked screens / data loss / wrong money amounts > broken buttons > ugly UI), before continuing the Step B section order. Same "Works" definition, real-click e2e test and browser check as every other item.
 - Each PR body must contain `Fixes #N` for every grok-review issue it fixes (one line per issue) so GitHub closes them on merge. You may comment on an issue (add_issue_comment) with progress; never close an issue without a merged fix, never delete issues or remove the label.
