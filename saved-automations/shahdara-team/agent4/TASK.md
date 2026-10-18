@@ -17,6 +17,16 @@ The owner (John) opened the app and says it is NOT fully functional: strange fun
 - Status in FEATURE_AUDIT.md must come from a REAL browser check (Playwright clicking it), never from reading code.
 - Never declare the job done while ANY item is not Works. When ALL items are Works, do a SECOND full top-to-bottom pass focused on polish, then keep re-checking.
 
+## REA RULE - understand before you fix (REA MCP `rea`, already granted in the sidecar)
+- START OF THE SOLO PASS (once, during Step A, and again if the audit is rebuilt): run `rea/analyze_javascript_application` on the app (the agent4 clone, or the local Playwright server http://localhost:4173 / https://offerpk.github.io/shahdara-isp-billing/) to build a FEATURE MAP: every screen, module, button/control, event handler and storage key. Use that map to make the FEATURE_AUDIT.md inventory COMPLETE (every control REA finds must have a row), and save a short summary of the map at the bottom of FEATURE_AUDIT.md under `## REA feature map`.
+- WHENEVER a feature/function/button's behaviour is unclear, or it is broken without an obvious cause, FIRST use REA to understand it, BEFORE editing code:
+  1. trace it: `rea/trace_application_feature` (button -> event listener -> handler -> data/storage), `rea/inspect_web_event_listeners` (what is actually bound to the element, or nothing), `rea/trace_web_source_location` / `rea/trace_javascript_semantics` (which source code runs and what it does);
+  2. watch it run: `rea/observe_web_execution` (click it and observe calls, errors, storage writes) and `rea/capture_browser_scenario` (reproduce the steps, capture screens/console);
+  3. anything you still cannot explain: `rea/record_unknown` (and `rea/list_unknowns` at the start of each turn; `rea/update_unknown` / `rea/verify_unknown_resolution` when solved).
+  Write the findings into the item's row in FEATURE_AUDIT.md (`Problem found`: listener/handler/storage path and root cause, e.g. "no listener bound - setupX() never called", "overlay #y intercepts click", "writes key z but list reads key w").
+- THEN fix. AFTER fixing, verify with REA `rea/capture_browser_scenario` (same steps, now working) and `rea/compare_web_screenshots` (before vs after, 390x844 and 1280x800) PLUS the Playwright e2e test. Mention the REA evidence in the PR description.
+- If the rea MCP is unavailable or errors, note it in STATE_agent4.md and continue with Playwright (do not stop the turn).
+
 ## Step 0 - EVERY turn, FIRST: grok-review issues (highest priority)
 - Grok reviews the live app (https://offerpk.github.io/shahdara-isp-billing/) every 2 hours and files GitHub issues in OfferPk/shahdara-isp-billing labeled `grok-review`.
 - At the START of every turn, list the OPEN issues labeled grok-review (GitHub MCP list_issues with labels=["grok-review"] and the open state value that tool accepts (e.g. "open" or "OPEN"; if one is rejected use the other), or search_issues `repo:OfferPk/shahdara-isp-billing is:issue is:open label:grok-review`). Read each with issue_read.
@@ -27,6 +37,7 @@ The owner (John) opened the app and says it is NOT fully functional: strange fun
 
 ## Step A - (Re)build FEATURE_AUDIT.md as an EXHAUSTIVE inventory (first solo turn; then keep it current)
 - Working dir: your clone. git fetch origin, git checkout -B feat/polish-audit-YYYYMMDD origin/main, npm ci.
+- FIRST run `rea/analyze_javascript_application` (REA RULE) to get the feature map; the inventory must cover every control it finds.
 - Write a Playwright inventory script (e.g. tests/e2e/inventory.spec.mjs or scripts/inventory.mjs) that, at mobile 390x844 AND desktop 1280x800, loads the app (with seeded demo data AND empty data), enumerates every visible and reachable control (button, link, [role=button], input, select, tab, menu item, [data-*action*]) with text, id/selector and screen, clicks/opens each one, and records what happened (a view/dialog became visible, data changed, nothing happened, JS error in console, overlay blocked the click). Take screenshots and LOOK at them.
 - Walk the app screen by screen in UI ORDER and list each control. Sections, in this order:
   1. Header (logo/title, search, theme toggle dark/light, notifications, profile/settings icons)
@@ -51,6 +62,7 @@ The owner (John) opened the app and says it is NOT fully functional: strange fun
 - Commit only the inventory script/tests (not FEATURE_AUDIT.md). The inventory turn still ends with a merged PR (e.g. the inventory spec + the first fixes).
 
 ## Step B - After open grok-review issues are fixed: fix, in UI order (section 1 first, then 2, ...), every item that is not Works
+For EACH item that is not Works or behaves unclearly: apply the REA RULE first (trace -> observe -> record unknowns -> write findings), then fix, then verify with REA capture_browser_scenario/compare_web_screenshots + Playwright.
 For EACH item, "Works" means ALL of:
 - it opens / is reachable (no overlay, FAB, toast or backdrop intercepts the click; elementFromPoint check);
 - it does its REAL job with the app's real data and storage (e.g. Add customer really adds a customer that appears in the list and survives a reload; Payment really reduces the due and creates a receipt; Export really downloads a correct file; WhatsApp share builds a correct wa.me link/text);
