@@ -7,7 +7,7 @@
 - Before building, search the code (rg) for an existing version of the feature. If it exists, extend and improve it instead of creating a duplicate.
 - Take tasks from your TASK.md backlog in order (top first). STATE "NEXT" ideas about network engineering are void.
 - ONLY project: OfferPk/shahdara-isp-billing (https://github.com/OfferPk/shahdara-isp-billing).
-- 4 agents, each with its OWN clone, work one after another in the 6-slot rotation agent1 -> agent4 -> agent2 -> agent4 -> agent3 -> agent4 -> agent1 ... (see TEAM.md):
+- SOLO MODE (since 2026-10-18, John): only agent4 runs, every turn. agent1, agent2, agent3 are PAUSED (do not run them, do not touch their folders/branches). The old 6-slot rotation (agent1 -> agent4 -> agent2 -> agent4 -> agent3 -> agent4) is paused; see TEAM.md. Agents:
   - agent1 shahdara-dashboard  -> C:\Users\Perfect\shahdara-project\agent1\shahdara-isp-billing (branches feat/dash-*)
   - agent2 shahdara-mobile-nav -> C:\Users\Perfect\shahdara-project\agent2\shahdara-isp-billing (branches feat/nav-*)
   - agent3 shahdara-forms-qa   -> C:\Users\Perfect\shahdara-project\agent3\shahdara-isp-billing (branches feat/qa-*)

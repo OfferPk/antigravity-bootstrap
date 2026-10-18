@@ -1,8 +1,8 @@
 {
   "name": "shahdara-team",
   "displayName": "shahdara-team",
-  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing, 6-slot rotation agent1 dashboard -> agent4 polish-qa -> agent2 mobile-nav -> agent4 -> agent3 forms-qa -> agent4 -> repeat, one at a time, each turn min 20 min and until its PR is merged. agent4 verifies and fixes existing features in a real browser (Playwright, 390x844 + 1280x800). Gate script: ticks never interrupt a run.",
-  "source": "Copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (updated 2026-10-17: agent4 polish-qa + browser verification rule). Not reconstructed.",
+  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing. SOLO MODE since 2026-10-18 (John): only agent4 polish-qa runs, every turn, doing a top-to-bottom full functional pass (every button/function working + polished, real-browser Playwright checks, real-click e2e tests); fixes open 'grok-review' GitHub issues first (Fixes #N). agent1/2/3 paused; team-mode files kept in team-mode/. Gate script: ticks never interrupt a run.",
+  "source": "Copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (updated 2026-10-18: solo agent4 mode + grok-review issues). Team-mode (6-slot rotation) versions in team-mode/.",
   "schedule": "CRON_TZ=Asia/Karachi every 5 min: team-gate.ps1 starts a new conversation ONLY if TEAM.lock is missing or older than 90 min (heartbeat after every step)",
   "workspace": "{{USERPROFILE}}\\shahdara-project",
   "files": [
@@ -96,7 +96,9 @@
   "notes": [
     "Recommended Shahdara setup (sequential). Replaces the 3 parallel agents: never run it together with them or with shahdara-ui.",
     "Gate log: shahdara-project\\team-gate.log. To restart a stuck cycle at once: delete shahdara-project\\TEAM.lock.",
-    "Turn order: 6-slot rotation in TEAM.md; shahdara-project\\NEXT_AGENT.txt holds '<slot> <agent>' (e.g. '2 agent4'); per-turn log in TEAM_STATE.md.",
-    "agent4 (shahdara-polish-qa) keeps agent4\\FEATURE_AUDIT.md (Works/Broken/Ugly per button) and adds Playwright e2e tests (tests/e2e/*.spec.mjs) + a CI e2e job. Covered by the existing sidecar grants (command(npx), command(npm), command(node), write_file on shahdara-project); no sidecar change needed."
+    "agent4 (shahdara-polish-qa) keeps agent4\\FEATURE_AUDIT.md (Works/Broken/Ugly per button) and adds Playwright e2e tests (tests/e2e/*.spec.mjs) + a CI e2e job. Covered by the existing sidecar grants (command(npx), command(npm), command(node), write_file on shahdara-project); no sidecar change needed.",
+    "Turn order (solo): every turn is agent4; NEXT_AGENT.txt = '2 agent4'. After 3 agent4 turns the run deletes TEAM.lock and ends; the gate starts a fresh conversation within 5 min.",
+    "Switch back to team mode (6-slot rotation agent1 -> agent4 -> agent2 -> agent4 -> agent3 -> agent4): copy team-mode/TEAM.md, TEAM_PROMPT.txt, AGENTS.md, agent4/TASK.md over the PC files, set NEXT_AGENT.txt to '1 agent1', remove the PAUSED line at the top of agent1-3 STATE files. No sidecar change and no restart needed (next conversation reads the files).",
+    "grok-review: Grok files GitHub issues labeled grok-review every 2 h; agent4 lists them at the start of every turn (GitHub MCP list_issues/search_issues, already granted), fixes them first and closes them via 'Fixes #N'."
   ]
 }

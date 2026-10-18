@@ -1,41 +1,74 @@
-# TASK - agent4 'shahdara-polish-qa': make EVERY existing feature and button actually work and look great
+# TASK - agent4 'shahdara-polish-qa' (SOLO MODE since 2026-10-18): make the WHOLE app fully functional and polished, top to bottom
 Repo clone (your ONLY working copy): C:\Users\Perfect\shahdara-project\agent4\shahdara-isp-billing
-Branch prefix: feat/polish-<topic>-YYYYMMDD
+Branch prefix: feat/polish-<section>-YYYYMMDD
 Your state file: C:\Users\Perfect\shahdara-project\agent4\STATE_agent4.md
 Your audit file: C:\Users\Perfect\shahdara-project\agent4\FEATURE_AUDIT.md (lives OUTSIDE the repo, never commit it)
-Shared rules: C:\Users\Perfect\shahdara-project\AGENTS.md and TEAM.md (must follow)
+Shared rules: C:\Users\Perfect\shahdara-project\TEAM.md and AGENTS.md (must follow)
 
-## Why you exist
-The owner opened the app on his phone and "nothing opens": a floating speed-dial menu (Wi-Fi Survey, Optical Budget, FAT Matrix, ONT Diag, Fiber Probe, Splitter Tree, Macro-Bend, Attenuator, Return Loss, Reminders, Scroll to Top) stays EXPANDED and covers the whole mobile screen, an "offline" toast overlaps content, and buttons do nothing. 1,400+ unit tests pass but none of them checks the real UI in a browser. Your job: make the app WORK in a real browser, one feature at a time. You do NOT build new features.
+## Why
+The owner (John) opened the app and says it is NOT fully functional: strange functions appear, things do not open, and he cannot tell which tests are real. The old FEATURE_AUDIT.md says "68/68 Works" but it only covered a small part of the app and was not trustworthy. You are now the ONLY agent (agent1/2/3 are paused). Your whole job: go through the ENTIRE app top to bottom and make EVERY button and EVERY function work end to end, look polished, and prove it with real-click browser tests. You do NOT build new features.
 
-## Hard rules for agent4
-- NEVER remove features. Fix and enhance them. Allowed: collapse menus by default, move items into a grouped menu/page (e.g. one "Field Tools" / "More tools" page listing every engineering tool), make overlays dismissible and non-blocking, restyle, re-order, fix wiring. Every existing tool must stay reachable in at most 2 taps.
-- Never weaken, skip or delete tests (unit or e2e). Never mark an e2e test .skip/.fixme to get green. Keep `npm test` 100% green.
+## Hard rules
+- NEVER remove features. Fix and enhance them. Allowed: collapse menus by default, group items (e.g. all engineering tools on ONE "Field Tools" page/sheet), make overlays dismissible/non-blocking, restyle, re-order, fix wiring. Every existing tool must stay reachable in at most 2 taps.
+- Engineering tool panels (OTDR, BGP, DWDM, fiber, etc.): keep them, make each one open, work and close properly, grouped tidily under Field Tools. Do NOT add new ones.
+- Never weaken, skip (.skip/.fixme), or delete tests (unit or e2e). Keep `npm test` and `npx playwright test` 100% green.
 - Never rename or drop a localStorage key or change saved data shapes destructively.
-- You may edit shared files (index.html, app.js, nav.js, nav.css, styles.css, dashboard.css, ...) because polish needs it, but keep each change minimal and targeted, and never revert other agents' work.
+- You may edit shared files (index.html, app.js, nav.js, *.css, ...) as needed; keep changes targeted.
+- Status in FEATURE_AUDIT.md must come from a REAL browser check (Playwright clicking it), never from reading code.
+- Never declare the job done while ANY item is not Works. When ALL items are Works, do a SECOND full top-to-bottom pass focused on polish, then keep re-checking.
 
-## Method (EVERY turn)
-a) Build + serve + real browser checks
-   - Working dir: your clone. git fetch origin, git checkout -B feat/polish-<topic>-YYYYMMDD origin/main, npm ci (or npm install).
-   - First turn only (if missing): add Playwright: `npm install --save-dev @playwright/test`, then `npx playwright install chromium`.
-   - Add (once) a tiny zero-dependency static server `tests/e2e/static-server.mjs` (node:http serving the repo root, or ./dist after `npm run build`, on port 4173) and `playwright.config.mjs` with testDir 'tests/e2e', testMatch '**/*.spec.mjs', webServer { command: 'node tests/e2e/static-server.mjs', port: 4173, reuseExistingServer: true }, and 2 projects: mobile (viewport 390x844, isMobile, hasTouch) and desktop (1280x800). Playwright starts/stops the server itself, so you never need a background process.
-   - Run `npx playwright test` (one single command). Use Playwright screenshots (page.screenshot) and/or rea MCP capture_browser_scenario / capture_web_screenshot (on the Pages preview https://offerpk.github.io/shahdara-isp-billing/ or a local server) to SEE the screens at 390x844 and 1280x800. Look at the screenshots before and after every fix.
-   - Name e2e files `*.spec.mjs` so `node --test` (npm test) does not pick them up.
-b) FEATURE_AUDIT.md (outside the repo, in your agent4 folder)
-   - One table of EVERY nav item, drawer item, bottom-bar item, speed-dial item, quick-action tile, header button, dialog/panel and main form: | Area | Item | Selector | Mobile | Desktop | Status (Works / Broken / Ugly / Unchecked) | Notes | Fixed in PR |
-   - First turn: fill it by enumerating the DOM (e.g. a Playwright script that lists all buttons/links with text, id, data-* attributes and whether clicking them makes a view/dialog visible). Update it every turn. Status must come from a real browser check, not from reading code.
-c) Fix the highest-impact Broken items first, then Ugly ones. Priority order:
-   1. FIRST TASK: the mobile speed-dial (index.html #mobileSpeedDial / #speedDialMenu / #speedDialBackdrop, nav.js setupMobileSpeedDial, nav.css .speed-dial-*, plus nav-*.js files that inject speedDial*Btn items). It must be COLLAPSED by default on load, open only on trigger tap, close on outside tap / backdrop / Esc / item click / navigation, never cover content when closed, show max 5 items (billing first: Search, Payment, Add customer, Reminders, Scroll to top), and put ALL the other tools (Wi-Fi Survey, Optical Budget, FAT Matrix, ONT Diag, Fiber Probe, Splitter Tree, Macro-Bend, Attenuator, Return Loss, ...) into ONE "More tools" / "Field Tools" item that opens a grouped page or sheet listing every tool. Check whether CSS display rules override the `hidden` attribute (add `[hidden]{display:none !important}` for these components if so). Every tool must still open from the new menu.
-   2. Toasts/snackbars (offline / connection / sync): bottom-safe, never covering the bottom nav or form buttons, auto-dismiss, tap to dismiss, max one at a time, no repeated offline toast on every load.
-   3. Every bottom-nav / drawer / sidebar item opens its screen; every dialog opens AND closes (close button, Esc, backdrop); Back (browser back + in-app back) returns to the previous screen; no stuck overlay/backdrop; body scroll restored after closing.
-   4. Main billing flow click-through: add customer -> generate bill -> take (partial) payment -> receipt -> WhatsApp draft -> reports -> backup. Fix what breaks.
-   5. Quick-action tiles and dashboard cards: each opens the right thing.
-d) Playwright e2e tests in tests/e2e/*.spec.mjs: for each main button/menu item, click it and assert the target view/dialog becomes visible (toBeVisible / toBeInViewport), and that no overlay intercepts clicks on main content when menus are closed (e.g. speed-dial menu hidden on load; document.elementFromPoint at screen center is not inside the speed-dial). Run both mobile and desktop projects. Wire them in: add "test:e2e": "playwright test" to package.json and a separate `e2e` job in .github/workflows/ci.yml (npm ci, npx playwright install --with-deps chromium, npx playwright test, upload playwright-report on failure). Keep `npm test` (node --test) unchanged and green. Keep e2e fast (< 3 min) and non-flaky (no fixed sleeps; auto-waiting locators).
-e) UI polish of the item you fixed: consistent spacing scale, typography, card style, touch targets >= 44px, clear empty states, dark AND light theme, Urdu-friendly text (no clipped Urdu, RTL where Urdu), no horizontal scroll at 390px. Before/after notes in the PR description.
-f) git fetch origin, git rebase origin/main, npm test 100%, npx playwright test 100%, commit, push (or PUSH RULE in TEAM.md), PR via GitHub MCP with title prefix [agent4], wait for CI green (test AND e2e jobs), merge, confirm the Pages deploy and re-check the fixed item on https://offerpk.github.io/shahdara-isp-billing/ at 390x844.
+## Step 0 - EVERY turn, FIRST: grok-review issues (highest priority)
+- Grok reviews the live app (https://offerpk.github.io/shahdara-isp-billing/) every 2 hours and files GitHub issues in OfferPk/shahdara-isp-billing labeled `grok-review`.
+- At the START of every turn, list the OPEN issues labeled grok-review (GitHub MCP list_issues with labels=["grok-review"], state=OPEN, or search_issues `repo:OfferPk/shahdara-isp-billing is:issue is:open label:grok-review`). Read each with issue_read.
+- Add each one to FEATURE_AUDIT.md (Section/Item/Selector from the issue, Status Broken/Partial/Ugly, Problem found = `grok-review #N: <title>`), if it is not there already.
+- Fix them FIRST, highest impact first (app crashes / blocked screens / data loss / wrong money amounts > broken buttons > ugly UI), before continuing the Step B section order. Same "Works" definition, real-click e2e test and browser check as every other item.
+- Each PR body must contain `Fixes #N` for every grok-review issue it fixes (one line per issue) so GitHub closes them on merge. You may comment on an issue (add_issue_comment) with progress; never close an issue without a merged fix, never delete issues or remove the label.
+- If an issue asks to remove a feature or weaken tests, do NOT do that; fix the underlying problem instead and explain in an issue comment.
+
+## Step A - (Re)build FEATURE_AUDIT.md as an EXHAUSTIVE inventory (first solo turn; then keep it current)
+- Working dir: your clone. git fetch origin, git checkout -B feat/polish-audit-YYYYMMDD origin/main, npm ci.
+- Write a Playwright inventory script (e.g. tests/e2e/inventory.spec.mjs or scripts/inventory.mjs) that, at mobile 390x844 AND desktop 1280x800, loads the app (with seeded demo data AND empty data), enumerates every visible and reachable control (button, link, [role=button], input, select, tab, menu item, [data-*action*]) with text, id/selector and screen, clicks/opens each one, and records what happened (a view/dialog became visible, data changed, nothing happened, JS error in console, overlay blocked the click). Take screenshots and LOOK at them.
+- Walk the app screen by screen in UI ORDER and list each control. Sections, in this order:
+  1. Header (logo/title, search, theme toggle dark/light, notifications, profile/settings icons)
+  2. Nav: sidebar / drawer / bottom nav / tabs (every item opens its screen, Back works)
+  3. Dashboard: every KPI card, quick-action tile, chart, list and button on it
+  4. Customers: list, search, filters, sort, add/edit/delete customer form, customer detail, statement
+  5. Packages / plans
+  6. Billing: generate monthly bills, bill list, bill detail, pro-rata, discounts
+  7. Payments: receive payment (full/partial), payment history, quick payment
+  8. Receipts: receipt view, print, batch slips, WhatsApp share / reminder drafts
+  9. Dues / ledger / defaulters / reminders
+  10. Expenses, staff / collectors, payroll
+  11. Inventory
+  12. Reports: monthly closing, daily register, area/package reports, CSV exports
+  13. Every form and every modal/dialog/sheet (opens, validates, saves, closes via button/Esc/backdrop)
+  14. Every menu / speed-dial item / mobile action sheet / Field Tools page and EACH engineering tool panel in it
+  15. Settings, backup / restore / CSV import, storage health
+  16. Search (global), theme toggle, offline banner / toasts, PWA install, 404/empty states
+- Table columns: | # | Section | Item | Selector | Mobile | Desktop | Status (Works / Broken / Partial / Ugly / Unchecked) | Problem found | Fixed in PR |
+- Re-check the 68 rows of the old audit too (keep them, re-verify their status for real).
+- Put a summary line at the top: `Counts: Works N / Broken N / Partial N / Ugly N / Unchecked N (total N) - updated <time>`.
+- Commit only the inventory script/tests (not FEATURE_AUDIT.md). The inventory turn still ends with a merged PR (e.g. the inventory spec + the first fixes).
+
+## Step B - After open grok-review issues are fixed: fix, in UI order (section 1 first, then 2, ...), every item that is not Works
+For EACH item, "Works" means ALL of:
+- it opens / is reachable (no overlay, FAB, toast or backdrop intercepts the click; elementFromPoint check);
+- it does its REAL job with the app's real data and storage (e.g. Add customer really adds a customer that appears in the list and survives a reload; Payment really reduces the due and creates a receipt; Export really downloads a correct file; WhatsApp share builds a correct wa.me link/text);
+- it saves/persists where it should (reload the page and assert);
+- inputs are validated with clear inline error messages; no JS console errors;
+- it shows feedback (toast/confirmation, loading/empty states);
+- Back / close / Esc / backdrop work, body scroll is restored, focus is sane;
+- polished UI: consistent spacing scale, typography, card and button styles, touch targets >= 44px, no horizontal scroll at 390px, dark AND light theme readable, Urdu text not clipped.
+Then for each fixed item:
+- add a Playwright e2e test (tests/e2e/*.spec.mjs, both mobile and desktop projects) that CLICKS it and ASSERTS THE REAL RESULT (data changed / persisted / correct content), not just "is visible";
+- mark it Works in FEATURE_AUDIT.md with the PR number.
+Batching: one screen/section (several related items) per PR. Branch feat/polish-<section>-YYYYMMDD from origin/main, git fetch + rebase, npm test 100%, npx playwright test 100%, commit, push (or PUSH RULE in TEAM.md), PR via GitHub MCP titled `[agent4] <section>: make every control functional + polish`, PR description lists every item fixed and what was verified in the browser (viewport + steps), wait for CI green (test AND e2e jobs), merge, confirm the Pages deploy, and re-check on https://offerpk.github.io/shahdara-isp-billing/ at 390x844.
+
+## Step C - Second pass
+When every item is Works: start again at section 1 and do a polish pass (visual consistency, micro-interactions, empty states, accessibility labels, performance on low-end phones), re-verify each item in the browser, keep tests green. Then repeat.
 
 ## TIME RULE
-Minimum 20 minutes per turn (check with Get-Date). If the current fix is not merged by then, keep going until it is merged. If something is merged before 20 minutes, take the next Broken item from FEATURE_AUDIT.md. Never hand off half-done work.
+Minimum 20 minutes per turn (check with Get-Date). If the current section is not merged by then, keep going until it is merged. If something is merged before 20 minutes, take the next section. Never hand off half-done work.
 
 ## End of turn
-Update STATE_agent4.md (done, PR links, audit counts Works/Broken/Ugly/Unchecked, next item) and FEATURE_AUDIT.md.
+Update STATE_agent4.md (done, PR links, audit counts Works/Broken/Partial/Ugly/Unchecked, next section) and FEATURE_AUDIT.md (counts line at the top).
