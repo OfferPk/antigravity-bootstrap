@@ -1,7 +1,7 @@
 {
   "name": "shahdara-team",
   "displayName": "shahdara-team",
-  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing. TEAM MODE since 2026-10-19 (John): 4 agents one at a time, sequential agent1 (Dashboard & Reports) -> agent2 (Mobile & Navigation) -> agent3 (Forms, Field Tools & Settings) -> agent4 (QA & Polish), each in a strict file-ownership LANE (LANES.md; cross-lane changes via lane:agentN / lane:grok issues; rebase on main before PR). grok-review issues first within the lane, REA rule, 7-step workflow, 20-min minimum until merged, quota rule (never rotate accounts). Solo copies in solo-mode-20261018/, old 6-slot team copies in team-mode-6slot-20261017/. 2026-10-19: quota-aware gate + budget mode + efficiency rules; Grok reviews only, former Grok-owned files moved to agent4 lane.",
+  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing. TEAM MODE since 2026-10-19 (John): 4 agents one at a time, sequential agent1 (Dashboard & Reports) -> agent2 (Mobile & Navigation) -> agent3 (Forms, Field Tools & Settings) -> agent4 (QA & Polish), each in a strict file-ownership LANE (LANES.md; cross-lane changes via lane:agentN / lane:grok issues; rebase on main before PR). grok-review issues first within the lane, REA rule, 7-step workflow, 20-min minimum until merged, quota rule (never rotate accounts). Solo copies in solo-mode-20261018/, old 6-slot team copies in team-mode-6slot-20261017/. 2026-10-19: quota-aware gate + budget mode + efficiency rules; Grok reviews only, former Grok-owned files moved to agent4 lane. 2026-10-19 21:55: agent5 Easypaisa Email Reader (issue #305, lane:agent5) added; gets every other budget run until agent5\\DONE.txt.",
   "source": "Copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, LANES.md, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (updated 2026-10-19: team mode with lanes).",
   "schedule": "CRON_TZ=Asia/Karachi every 5 min: team-gate.ps1 starts a new conversation ONLY if TEAM.lock is missing or older than 90 min (heartbeat after every step). QUOTA-AWARE (2026-10-19): after a 429 run the gate writes QUOTA_WAIT.txt and retries once per hour. BUDGET MODE until 2026-10-21 12:30 PKT (BUDGET.json): max 4 runs/day, 240 min gap, one 45-min turn per run, order agent1>agent3>agent2>agent4(every other cycle), agent4 on flash_lite; auto-expires.",
   "workspace": "{{USERPROFILE}}\\shahdara-project",
@@ -89,6 +89,18 @@
     {
       "src": "agent4/GEMINI.md",
       "dest": "{{USERPROFILE}}\\shahdara-project\\agent4\\GEMINI.md"
+    },
+    {
+      "src": "agent5/GEMINI.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent5\\GEMINI.md"
+    },
+    {
+      "src": "agent5/TASK.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent5\\TASK.md"
+    },
+    {
+      "src": "agent5/STATE_agent5.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\agent5\\STATE_agent5.md"
     }
   ],
   "folders": [

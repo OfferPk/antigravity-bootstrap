@@ -42,3 +42,10 @@ Every agent edits ONLY the files/areas of its own lane. This is what keeps the f
 ## agent4 lane: former Grok-owned files (John, 2026-10-19: Grok no longer writes code; agent4 owns these now)
 `customer-plan.js`, `customer-import.js`, `customer-import-core.js`, `customer-import.css`, `bulk-collect.js`, `bulk-collect.css`, `collect-setup.js`, `nav-quick-collect.js`, `nav-quick-profile.js`, `screen-router.js`, `screen-router.css`, `ui-feedback.js`, `ui-feedback.css` (toast + in-app confirm), `dark-contrast.css`, `payments-list.js`, `payments-list.css`, `profile-ui.js`, `profile-labels.js`, `package-catalog.js`, `receipt.js`, `duplicate-detection.js`, and the customer / payment / Quick Collect parts of `app.js`. Issues #225 (customer statement) stay with Grok.
 agent4 implements fixes here (small focused PRs; read the notes of PRs #291 #295 #299 first). Other agents: bugs here -> open an issue labeled `lane:agent4`.
+
+## agent5 - Easypaisa Email Reader (added 2026-10-19, John) - issue #305 only
+- Folder/clone: C:\Users\Perfect\shahdara-project\agent5\shahdara-isp-billing, branches feat/easypaisa-*, label lane:agent5.
+- OWNS: integrations/gmail-easypaisa/**, the Easypaisa parser module, the new Payments Inbox module (payments-inbox.* / easypaisa-*.js/css), their unit tests and e2e specs (tests/easypaisa-*, tests/e2e/easypaisa-*), and the route #/easypaisa.
+- Additive wiring allowed: one script/link tag in index.html and one #/easypaisa route entry in screen-router.js (existing pattern); otherwise a lane:agent4 issue.
+- Payment recording ONLY through the existing payment API/logic and toast/confirm system; never edit other lanes' files for it (open a lane:agent4 / lane:agentN issue if the API lacks something).
+- Issue: #305. When merged + live-verified, agent5 writes agent5\DONE.txt and leaves the rotation.

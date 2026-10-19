@@ -84,12 +84,13 @@ Shared rules: C:\Users\Perfect\shahdara-project\AGENTS.md (must follow; this fil
   - finished slot 1 (agent1) -> `2 agent2`
   - finished slot 2 (agent2) -> `3 agent3`
   - finished slot 3 (agent3) -> `4 agent4`
-  - finished slot 4 (agent4) -> `1 agent1`
+  - finished slot 4 (agent4) -> `5 agent5` (or `1 agent1` if agent5\DONE.txt exists)
+  - finished slot 5 (agent5) -> `1 agent1`
 - Heartbeat TEAM.lock.
 
 ## 4. Continue
 - IMMEDIATELY start the next slot's turn in this same run (go to step 1). Do NOT end the conversation between agents.
-- After 4 completed turns in this run (one full rotation), delete TEAM.lock (Remove-Item C:\Users\Perfect\shahdara-project\TEAM.lock) and end this conversation, so a fresh conversation (fresh context) continues the cycle automatically within 5 minutes from NEXT_AGENT.txt.
+- After one full rotation in this run (4 turns, or 5 while agent5 is active), delete TEAM.lock (Remove-Item C:\Users\Perfect\shahdara-project\TEAM.lock) and end this conversation, so a fresh conversation (fresh context) continues the cycle automatically within 5 minutes from NEXT_AGENT.txt.
 - QUOTA RULE: if a model call fails with quota / rate limit (429, RESOURCE_EXHAUSTED, 'Individual quota reached'), save STATE_agentN.md and TEAM_STATE.md (write the reset time if shown; do not advance NEXT_AGENT.txt if the turn is unfinished), then delete TEAM.lock and end. NEVER switch, rotate or add accounts/API keys to get around a quota; just wait for the reset.
 
 ## EFFICIENCY & QUOTA RULE (John, 2026-10-19) - save model quota, every agent, every turn
@@ -102,7 +103,7 @@ Shared rules: C:\Users\Perfect\shahdara-project\AGENTS.md (must follow; this fil
 
 ## BUDGET MODE (John, 2026-10-19 -> until the Oct 21 quota refresh, BUDGET.json "until" = 2026-10-21 12:30 PKT) - overrides the long-turn rules while active
 - WHY: the bought quota must last ~2 days until the Oct 21 refresh. Before, one 3-hour run (4 long turns) used most of a day's quota; now runs are short and capped.
-- The gate (team-gate.ps1) reads C:\Users\Perfect\shahdara-project\BUDGET.json: at most maxPerDay = 4 runs per local day, at least minGapMinutes = 240 (4 h) between run starts, ONE agent turn per run. The gate picks the agent from BUDGET.json "order" (agent1 -> agent3 -> agent2 -> agent4 -> agent1 -> agent3 -> agent2, i.e. agent4 only every other cycle) and writes NEXT_AGENT.txt itself; agents must NOT change NEXT_AGENT.txt in budget mode. agent4 (QA) runs with the cheaper flash_lite model ("models" in BUDGET.json); agents 1-3 use the default model. A run that dies on 429 is not counted.
+- The gate (team-gate.ps1) reads C:\Users\Perfect\shahdara-project\BUDGET.json: at most maxPerDay = 4 runs per local day, at least minGapMinutes = 240 (4 h) between run starts, ONE agent turn per run. The gate picks the agent from BUDGET.json "order" (agent1 -> agent5 -> agent3 -> agent5 -> agent2 -> agent5 -> agent4 -> agent5 -> agent1 ..., i.e. agent5 every other run while #305 is open, agent4 only every other cycle) and writes NEXT_AGENT.txt itself; agents must NOT change NEXT_AGENT.txt in budget mode. agent4 (QA) runs with the cheaper flash_lite model ("models" in BUDGET.json); agents 1-3 use the default model. A run that dies on 429 is not counted.
 - The gate prepends BUDGET_PROMPT.txt to TEAM_PROMPT.txt. Each turn = ONE focused issue, HARD CAP 45 minutes (the 20-minute minimum / keep-going / 4-turns-per-run rules are paused). Not done at 45 min: push the branch, DRAFT PR, short PLAN comment on the issue, write STATE, delete TEAM.lock, end.
 - Read narrowly (LANES.md, TASK.md, latest STATE entry, the issue, then rg/REA on that issue's files only). No full-repo scans, no rea/analyze_javascript_application. Locally run only the targeted unit test + targeted e2e spec; CI runs the full suite (CI must be green before merge).
 - Priority order: agent1 = #278 by finishing PR #286 (feat/polish-home-height-278), then #287; agent3 = #283, then #284; agent2 = #285; agent4 = live verification of the PRs merged since its last turn, results posted on the issues.
@@ -112,6 +113,12 @@ Shared rules: C:\Users\Perfect\shahdara-project\AGENTS.md (must follow; this fil
 - PR title `[agentN] #<issue> <short summary>`; body: `Fixes #N`, `Lane: agentN`, what you verified (tests, 390x844/1280x800, live). Label your issues/PRs `lane:agentN`.
 - Write a PLAN only for yourself in the issue when a task is too big for one 45-min turn, then do it in small PRs over the next turns. Keep STATE_agentN.md current: after each milestone append a short dated entry `LAST: ... / PR: ... / NEXT: ...`; append one TEAM_STATE.md line per turn. Grok reads these to verify your work.
 - Former Grok-owned modules (customer-plan, customer-import, bulk-collect, collect-setup, nav-quick-collect/profile, screen-router, ui-feedback toast/confirm, payments-list, receipt, dark-contrast) are now agent4's lane. Other agents: open a `lane:agent4` issue. Never edit another agent's open PRs.
+
+## AGENT5 - Easypaisa Email Reader (John, 2026-10-19)
+- 5th agent, slot 5, folder C:\Users\Perfect\shahdara-project\agent5, branches feat/easypaisa-*, label lane:agent5. ONLY job: issue #305 (Apps Script + Sheet + Payments Inbox, route #/easypaisa); lane in LANES.md; payments only via the existing payment API, never editing other lanes' files.
+- PRIORITY while #305 is open: in BUDGET MODE agent5 gets every other run (2 of the 4 daily runs; the daily cap is NOT raised). In normal mode it is slot 5 after agent4. Shared quota: same BUDGET / QUOTA rules (on a 429 save STATE, delete TEAM.lock, end).
+- When #305 is merged and verified live, agent5 writes agent5\DONE.txt; the gate then skips agent5 and the others get its runs.
+- Old-format NEXT_AGENT values: `5 agent5` -> slot 5 (agent5); if agent5\DONE.txt exists use slot 1.
 
 ## REA RULE (all agents) - understand before you fix (REA MCP `rea`, granted in the sidecar)
 - When a feature/button is unclear or broken without an obvious cause, FIRST use REA before editing: rea/trace_application_feature, rea/inspect_web_event_listeners, rea/trace_web_source_location / rea/trace_javascript_semantics, then rea/observe_web_execution and rea/capture_browser_scenario; record what you still cannot explain with rea/record_unknown (rea/list_unknowns at turn start).

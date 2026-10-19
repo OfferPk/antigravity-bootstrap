@@ -1,0 +1,43 @@
+# HARD RULES (Shahdara project, 4 agents taking turns ONE AT A TIME via the shahdara-team orchestrator - see TEAM.md)
+## HARD SCOPE RULE (added 2026-10-17, overrides older ideas in STATE files)
+- This repo is a small Pakistani ISP's offline BILLING / BUSINESS app. ALL NEW work must be billing/business features only: customers, packages, monthly bills, payments, receipts (incl. WhatsApp), dues/ledger, expenses, staff/collectors, reports, settings, backup/restore, and UI/UX polish of these.
+- FORBIDDEN for new work: network / optical / routing engineering tools, calculators or simulators (OTDR, BGP, MPLS, SRv6, EVPN, DWDM, ROADM, OTN, PON/DBA physics, fiber splicing/cleaving, Raman/EDFA, PMD, Kerr, microwave, etc.). Do not create new dashboard-*/nav-*/qa-* modules of this kind and do not extend the existing ones.
+- NEVER remove, hide or break existing features (including the engineering panels already in the app). Only add new billing features and improve existing ones. Keep `npm test` 100% green.
+- Test for every task: "Does this help the owner bill, collect, track dues/expenses or run the business faster?" If not, pick the next task from your TASK.md backlog.
+- Before building, search the code (rg) for an existing version of the feature. If it exists, extend and improve it instead of creating a duplicate.
+- Take tasks from your TASK.md backlog in order (top first). STATE "NEXT" ideas about network engineering are void.
+- ONLY project: OfferPk/shahdara-isp-billing (https://github.com/OfferPk/shahdara-isp-billing).
+- TEAM MODE (since 2026-10-19, John): the 4 agents take turns ONE AT A TIME in a sequential rotation agent1 -> agent2 -> agent3 -> agent4 -> agent1 (see TEAM.md; TEAM.lock heartbeat). LANE RULE: each agent edits ONLY the files/areas of its own lane (C:\Users\Perfect\shahdara-project\LANES.md); a change in another lane's file or a agent4-owned (ex-Grok) module (customer-plan.js, customer-import*.js, bulk-collect.*, screen-router.*, ui-feedback.* toast/confirm, payments-list.*, receipt.js ...) = open a GitHub issue labeled lane:agentN instead. Always git fetch + git rebase origin/main before opening the PR and again before merging. Agents:
+  - agent1 shahdara-dashboard  -> C:\Users\Perfect\shahdara-project\agent1\shahdara-isp-billing (branches feat/dash-*)
+  - agent2 shahdara-mobile-nav -> C:\Users\Perfect\shahdara-project\agent2\shahdara-isp-billing (branches feat/nav-*)
+  - agent3 shahdara-forms-qa   -> C:\Users\Perfect\shahdara-project\agent3\shahdara-isp-billing (branches feat/qa-*)
+  - agent4 shahdara-polish-qa  -> C:\Users\Perfect\shahdara-project\agent4\shahdara-isp-billing (branches feat/polish-*): real-browser QA + UI polish of existing features
+  - agent5 shahdara-easypaisa -> C:\Users\Perfect\shahdara-project\agent5\shahdara-isp-billing (branches feat/easypaisa-*): Easypaisa Email Reader, issue #305 only (see agent5\TASK.md)
+  Work ONLY in your own agentN folder and clone. Never edit another agent's folder, files, branches or PRs. C:\Users\Perfect\shahdara-project\shahdara-isp-billing is an old reference copy: do not use it.
+- NEVER open, clone, edit, push to, or create any other repo (zen*, z*, ludo, shahdara-isp-billing-cloud, shahdara-fiber-net, or anything else). Never create new repos. IGNORE C:\Users\Perfect\app-factory and any old memories/state about other apps.
+- No backend. Static web app only. Keep all billing features, saved data and localStorage/storage keys working (never rename or drop a storage key; migrate safely if a shape changes).
+- Each agent turn = ONE substantial feature/screen implemented completely (minimum 20 minutes; keep going until it is merged). No tiny edits. ALWAYS start from latest origin/main: git fetch origin, then create the branch from origin/main. Before opening/merging a PR: git fetch origin and git rebase origin/main (or git merge origin/main), rerun npm test.
+- Stay inside your area; avoid editing files outside it. Prefer adding new files over editing shared ones. If a merge conflict happens: rebase onto origin/main and resolve KEEPING the other agents' work (never revert or overwrite their changes).
+- Merge a PR ONLY when `npm test` passes 100% locally AND CI is green on GitHub. main is protected: never force-push main, never delete main, never push directly to main. (Force-push only your own feature branch after a rebase: git push --force-with-lease.)
+- Keep the GitHub Pages preview workflow (.github/workflows/pages.yml) working. Preview: https://offerpk.github.io/shahdara-isp-billing/
+- Run every terminal command as a single command: no cd/Set-Location, no && or ;. Set the working directory via the tool.
+- Never commit agent files (AGENTS.md, GEMINI.md, PROMPT.md, STATE*.md, TASK.md, FEATURE_AUDIT.md, RUNNING.lock, .agent) into the repo; they live outside the repo folder.
+# THIS WORKSPACE = agent5 shahdara-easypaisa (Easypaisa Email Reader, GitHub issue #305 only, branches feat/easypaisa-*). Read TASK.md and STATE_agent5.md in this folder.
+
+## BROWSER VERIFICATION RULE (added 2026-10-17, all agents)
+- Unit tests are NOT enough. Before every PR, open your changed feature in a REAL browser at mobile 390x844 and desktop 1280x800 (Playwright `npx playwright test` / scripts, or rea MCP capture_browser_scenario / capture_web_screenshot on a local server or the Pages preview).
+- Check: it OPENS, every new button WORKS, it CLOSES (close / Esc / backdrop), Back works, and NO menu, FAB, toast, backdrop or overlay covers content when it should be closed. No horizontal scroll at 390px. Dark + light readable.
+- If tests/e2e/*.spec.mjs exists: add/extend an e2e test for your feature and keep `npx playwright test` green. Never skip or weaken e2e tests. Note in the PR what you verified in the browser.
+- PREFER ENHANCING EXISTING FEATURES over adding new ones. agent4 (shahdara-polish-qa) fixes and polishes existing features between your turns; do not undo its fixes (e.g. do not re-expand the speed-dial or add new items to it; new tools go into the grouped "More tools"/"Field Tools" page).
+
+## EFFICIENCY & QUOTA RULE (John, 2026-10-19) - save model quota, every agent, every turn
+- START SMALL: read LANES.md, your agentN\TASK.md and the LATEST part of your STATE_agentN.md first (the top summary + the last NEXT/milestone section, e.g. Get-Content -Tail 120; agent4 also the open rows of FEATURE_AUDIT.md). Do NOT re-read whole STATE/TEAM_STATE history or the whole repo every turn.
+- TARGETED READING: find code with rg/grep and REA aimed at YOUR lane (rea/trace_application_feature, rea/trace_web_source_location, inspect_web_event_listeners) and open only the files/line ranges you need. Run rea/analyze_javascript_application at most once per turn, only if the feature map is really needed.
+- TESTS: while iterating run only the targeted tests (npm test -- <file/pattern>, npx playwright test <spec> --project <one>). Run the FULL npm test + full e2e suite (390x844 and 1280x800) ONCE before opening the PR, and again only if a rebase pulled new commits from main. CI is the final gate. (WORKFLOW RULE steps 3/4/6 still apply; this only removes repeated full runs while coding.)
+- ONE FOCUSED ISSUE PER PR: each PR fixes one issue / one feature (Fixes #N). A turn can still contain several PRs; the 20-minute LONG turn rule stays.
+- STATE AFTER EACH MILESTONE: after each milestone (root cause found, code done, tests green, PR opened, merged, live verified) append a short dated entry to STATE_agentN.md (what, PR/issue, NEXT). Keep entries short; never rewrite history. Then a quota stop loses nothing.
+- ON A 429 / RESOURCE_EXHAUSTED / 'Individual quota reached': save STATE_agentN.md + TEAM_STATE.md (reset time if shown, do not advance NEXT_AGENT.txt if the turn is unfinished), remove TEAM.lock (Remove-Item C:\Users\Perfect\shahdara-project\TEAM.lock) and STOP. Never switch, rotate or add accounts/API keys. The gate (team-gate.ps1) then writes QUOTA_WAIT.txt and retries once per hour; never delete QUOTA_WAIT.txt yourself.
+
+## BUDGET MODE + HELP GROK RULE (Grok reviews only, agents do ALL coding) (John, 2026-10-19)
+- While C:\Users\Perfect\shahdara-project\BUDGET.json is active (until 2026-10-21 12:30 PKT): ONE run = ONE turn = ONE focused issue, hard cap 45 min, targeted reads/tests only (CI runs the full suite), the gate picks the agent and writes NEXT_AGENT.txt (do not change it). Not done at 45 min: draft PR + short PLAN on the issue, STATE, delete TEAM.lock, end. Full rules: BUDGET MODE and HELP GROK RULE in TEAM.md.
+- Help Grok: PR title [agentN] #issue summary, Fixes #N, Lane: line, label lane:agentN, append STATE 'LAST / PR / NEXT' after each milestone.
