@@ -1,14 +1,18 @@
 {
   "name": "shahdara-team",
   "displayName": "shahdara-team",
-  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing. SOLO MODE since 2026-10-18 (John): only agent4 polish-qa runs, every turn, doing a top-to-bottom full functional pass (every button/function working + polished, real-browser Playwright checks, real-click e2e tests); fixes open 'grok-review' GitHub issues first (Fixes #N). agent1/2/3 paused; team-mode files kept in team-mode/. Gate script: ticks never interrupt a run.",
-  "source": "Copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (updated 2026-10-18: solo agent4 mode + grok-review issues). Team-mode (6-slot rotation) versions in team-mode/.",
+  "summary": "ONE orchestrator for OfferPk/shahdara-isp-billing. TEAM MODE since 2026-10-19 (John): 4 agents one at a time, sequential agent1 (Dashboard & Reports) -> agent2 (Mobile & Navigation) -> agent3 (Forms, Field Tools & Settings) -> agent4 (QA & Polish), each in a strict file-ownership LANE (LANES.md; cross-lane changes via lane:agentN / lane:grok issues; rebase on main before PR). grok-review issues first within the lane, REA rule, 7-step workflow, 20-min minimum until merged, quota rule (never rotate accounts). Solo copies in solo-mode-20261018/, old 6-slot team copies in team-mode-6slot-20261017/.",
+  "source": "Copy of sidecars\\shahdara-team\\sidecar.json + shahdara-project\\TEAM.md, TEAM_PROMPT.txt, LANES.md, team-gate.ps1, AGENTS.md, agentN\\TASK.md from John's PC (updated 2026-10-19: team mode with lanes).",
   "schedule": "CRON_TZ=Asia/Karachi every 5 min: team-gate.ps1 starts a new conversation ONLY if TEAM.lock is missing or older than 90 min (heartbeat after every step)",
   "workspace": "{{USERPROFILE}}\\shahdara-project",
   "files": [
     {
       "src": "TEAM.md",
       "dest": "{{USERPROFILE}}\\shahdara-project\\TEAM.md"
+    },
+    {
+      "src": "LANES.md",
+      "dest": "{{USERPROFILE}}\\shahdara-project\\LANES.md"
     },
     {
       "src": "TEAM_PROMPT.txt",
@@ -97,8 +101,10 @@
     "Recommended Shahdara setup (sequential). Replaces the 3 parallel agents: never run it together with them or with shahdara-ui.",
     "Gate log: shahdara-project\\team-gate.log. To restart a stuck cycle at once: delete shahdara-project\\TEAM.lock.",
     "agent4 (shahdara-polish-qa) keeps agent4\\FEATURE_AUDIT.md (Works/Broken/Ugly per button) and adds Playwright e2e tests (tests/e2e/*.spec.mjs) + a CI e2e job. Covered by the existing sidecar grants (command(npx), command(npm), command(node), write_file on shahdara-project); no sidecar change needed.",
-    "Turn order (solo): every turn is agent4; NEXT_AGENT.txt = '2 agent4'. After 3 agent4 turns the run deletes TEAM.lock and ends; the gate starts a fresh conversation within 5 min.",
-    "Switch back to team mode (6-slot rotation agent1 -> agent4 -> agent2 -> agent4 -> agent3 -> agent4): copy team-mode/TEAM.md, TEAM_PROMPT.txt, AGENTS.md, agent4/TASK.md over the PC files, set NEXT_AGENT.txt to '1 agent1', remove the PAUSED line at the top of agent1-3 STATE files. No sidecar change and no restart needed (next conversation reads the files).",
-    "grok-review: Grok files GitHub issues labeled grok-review every 2 h; agent4 lists them at the start of every turn (GitHub MCP list_issues/search_issues, already granted), fixes them first and closes them via 'Fixes #N'."
+    "grok-review: Grok files GitHub issues labeled grok-review every 2 h; agent4 lists them at the start of every turn (GitHub MCP list_issues/search_issues, already granted), fixes them first and closes them via 'Fixes #N'.",
+    "Turn order (team, since 2026-10-19): slot1 agent1 -> slot2 agent2 -> slot3 agent3 -> slot4 agent4 -> slot1; NEXT_AGENT.txt = '<slot> <agent>' (start '1 agent1'). After 4 turns the run deletes TEAM.lock and ends; the gate starts a fresh conversation within 5 min.",
+    "LANES.md: strict file ownership per agent (agent1 Dashboard & Reports, agent2 Mobile & Navigation, agent3 Forms / Field Tools / Settings, agent4 QA & Polish with no feature files, plus Grok-owned customer/payment/Quick+Bulk Collect/toast/screen-router modules). Cross-lane changes go through GitHub issues labeled lane:agent1..4 / lane:grok (labels exist in OfferPk/shahdara-isp-billing).",
+    "Quota: on 429 RESOURCE_EXHAUSTED the run saves state and deletes TEAM.lock; never rotate accounts. All agents share one Antigravity quota.",
+    "Switch to solo mode again: copy solo-mode-20261018/* over the PC files and set NEXT_AGENT.txt to '2 agent4'. Old 6-slot team files: team-mode-6slot-20261017/."
   ]
 }
