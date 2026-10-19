@@ -10,7 +10,7 @@ Solo mode (2026-10-18/19) brought the audit to 118/118 Works. Since 2026-10-19 t
 
 ## TEAM MODE + YOUR LANE (2026-10-19, overrides anything below that conflicts)
 - TEAM MODE (resumed 2026-10-19 by John): agents take turns ONE AT A TIME, sequential rotation agent1 -> agent2 -> agent3 -> agent4 -> agent1 (TEAM.md, TEAM.lock heartbeat after every step).
-- LANE RULE: edit ONLY the files/areas of your lane below (full table: C:\Users\Perfect\shahdara-project\LANES.md). If a change needs another lane's file or a Grok-owned module (customer-plan.js, customer-import*.js, bulk-collect.*, collect-setup.js, nav-quick-collect.js, screen-router.*, ui-feedback.* toast/confirm, dark-contrast.css, payments-list.*, receipt.js, profile-ui.js ...), do NOT edit it: open a GitHub issue labeled `lane:agentN` / `lane:grok` and continue with in-lane work. Before committing run `git diff --name-only origin/main` and check every file is in your lane; put `Lane: <agent> - files: <list>` in the PR body.
+- LANE RULE: edit ONLY the files/areas of your lane below (full table: C:\Users\Perfect\shahdara-project\LANES.md). If a change needs another lane's file or a agent4-owned (ex-Grok) module (customer-plan.js, customer-import*.js, bulk-collect.*, collect-setup.js, nav-quick-collect.js, screen-router.*, ui-feedback.* toast/confirm, dark-contrast.css, payments-list.*, receipt.js, profile-ui.js ...), do NOT edit it: open a GitHub issue labeled `lane:agentN` / `lane:agent4` and continue with in-lane work. Before committing run `git diff --name-only origin/main` and check every file is in your lane; put `Lane: <agent> - files: <list>` in the PR body.
 - ALWAYS git fetch origin + git rebase origin/main right before opening the PR and again right before merging (rerun npm test + e2e).
 - ORDER each turn: (1) finish your own open branch/PR, (2) open grok-review issues of YOUR lane (highest impact first, `Fixes #N` in the PR), (3) open `lane:agent4` issues, (4) the BACKLOG below.
 - Every task follows the 7-step WORKFLOW RULE and the REA RULE in TEAM.md (understand repo + REA trace -> code -> tests on built dist at 390x844 and 1280x800 -> fix bugs -> self-review -> push/PR/CI green/squash-merge -> verify LIVE). Done only after live verification. Minimum 20 minutes per turn, keep going until merged.
@@ -18,9 +18,9 @@ Solo mode (2026-10-18/19) brought the audit to 118/118 Works. Since 2026-10-19 t
 
 ### Your lane
 - Does NOT own feature files. Owns: `tests/e2e/**` (new click-test specs), `scripts/**`, `playwright.config.*`, `FEATURE_AUDIT.md`, shared look in `styles.css` (small PRs), new `tokens.css` / styleguide for #230.
-- Job: click-test the whole LIVE app at 390x844 and 1280x800, review and verify every other lane's merged PR on the live site, write real click tests, polish small shared UI issues. For anything in a feature file: open an issue for the owner lane (`lane:agentN` / `lane:grok`) with steps, screenshot path and expected result.
+- Job: click-test the whole LIVE app at 390x844 and 1280x800, review and verify every other lane's merged PR on the live site, write real click tests, polish small shared UI issues. For anything in a feature file: open an issue for the owner lane (`lane:agentN` / `lane:agent4`) with steps, screenshot path and expected result.
 - Issues: #229 accessibility baseline in CI (axe), #230 design tokens / styleguide (shared CSS only), QA of all merged work. PR #286 is handed over to agent1 (do not continue it).
-- Small fixes in Grok-owned modules are allowed ONLY after reading `docs/` / PR notes of the last Grok PRs (#291 #295 #299), keep them tiny, and mention `lane:grok` in the PR.
+- agent4 OWNS the former Grok modules (see LANES.md): fix them in small focused PRs after reading the notes of PRs #291 #295 #299; never remove their features.
 - PR #286 (`feat/polish-home-height-278`, Home length #278, e2e failing) is HANDED OVER to agent1. Do not push to it; leave your local branch as it is (agent1 continues it from GitHub).
 - Turn order for you: (1) list PRs merged since your last turn (GitHub MCP list_pull_requests state closed) and verify each one LIVE at both sizes; anything broken -> issue for the owner lane (`lane:agentN`), with steps + screenshot; (2) grok-review issues in your lane (#229, #230); (3) Step B/C below as a QA pass: fix only test files and shared CSS yourself, file issues for everything else.
 
@@ -29,7 +29,7 @@ Solo mode (2026-10-18/19) brought the audit to 118/118 Works. Since 2026-10-19 t
 - Engineering tool panels (OTDR, BGP, DWDM, fiber, etc.): keep them, make each one open, work and close properly, grouped tidily under Field Tools. Do NOT add new ones.
 - Never weaken, skip (.skip/.fixme), or delete tests (unit or e2e). Keep `npm test` and `npx playwright test` 100% green.
 - Never rename or drop a localStorage key or change saved data shapes destructively.
-- LANE: you may edit tests/e2e/**, scripts/**, playwright config, styles.css (shared look, small PRs) and new tokens.css/styleguide files. Feature files (index.html blocks, app.js, nav*.js, dashboard*.js, qa-*.js, Grok-owned modules) belong to other lanes: open an issue labeled `lane:agentN` / `lane:grok` instead (tiny Grok-module fixes only per LANES.md).
+- LANE: you may edit tests/e2e/**, scripts/**, playwright config, styles.css (shared look, small PRs) and new tokens.css/styleguide files. Feature files (index.html blocks, app.js, nav*.js, dashboard*.js, qa-*.js, agent4-owned (ex-Grok) modules) belong to other lanes: open an issue labeled `lane:agentN` / `lane:agent4` instead (tiny Grok-module fixes only per LANES.md).
 - Status in FEATURE_AUDIT.md must come from a REAL browser check (Playwright clicking it), never from reading code.
 - Never declare the job done while ANY item is not Works. When ALL items are Works, do a SECOND full top-to-bottom pass focused on polish, then keep re-checking.
 
