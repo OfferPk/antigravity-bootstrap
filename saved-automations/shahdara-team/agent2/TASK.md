@@ -7,7 +7,7 @@ Shared rules: C:\Users\Perfect\shahdara-project\TEAM.md, LANES.md and AGENTS.md 
 
 ## TEAM MODE + YOUR LANE (2026-10-19, overrides anything below that conflicts)
 - TEAM MODE (resumed 2026-10-19 by John): agents take turns ONE AT A TIME, sequential rotation agent1 -> agent2 -> agent3 -> agent4 -> agent1 (TEAM.md, TEAM.lock heartbeat after every step).
-- LANE RULE: edit ONLY the files/areas of your lane below (full table: C:\Users\Perfect\shahdara-project\LANES.md). If a change needs another lane's file or a Grok-owned module (customer-plan.js, customer-import*.js, bulk-collect.*, collect-setup.js, nav-quick-collect.js, screen-router.*, ui-feedback.* toast/confirm, dark-contrast.css, payments-list.*, receipt.js, profile-ui.js ...), do NOT edit it: open a GitHub issue labeled `lane:agentN` / `lane:grok` and continue with in-lane work. Before committing run `git diff --name-only origin/main` and check every file is in your lane; put `Lane: <agent> - files: <list>` in the PR body.
+- LANE RULE: edit ONLY the files/areas of your lane below (full table: C:\Users\Perfect\shahdara-project\LANES.md). If a change needs another lane's file or a agent4-owned (ex-Grok) module (customer-plan.js, customer-import*.js, bulk-collect.*, collect-setup.js, nav-quick-collect.js, screen-router.*, ui-feedback.* toast/confirm, dark-contrast.css, payments-list.*, receipt.js, profile-ui.js ...), do NOT edit it: open a GitHub issue labeled `lane:agentN` / `lane:agent4` and continue with in-lane work. Before committing run `git diff --name-only origin/main` and check every file is in your lane; put `Lane: <agent> - files: <list>` in the PR body.
 - ALWAYS git fetch origin + git rebase origin/main right before opening the PR and again right before merging (rerun npm test + e2e).
 - ORDER each turn: (1) finish your own open branch/PR, (2) open grok-review issues of YOUR lane (highest impact first, `Fixes #N` in the PR), (3) open `lane:agent2` issues, (4) the BACKLOG below.
 - Every task follows the 7-step WORKFLOW RULE and the REA RULE in TEAM.md (understand repo + REA trace -> code -> tests on built dist at 390x844 and 1280x800 -> fix bugs -> self-review -> push/PR/CI green/squash-merge -> verify LIVE). Done only after live verification. Minimum 20 minutes per turn, keep going until merged.
@@ -16,7 +16,7 @@ Shared rules: C:\Users\Perfect\shahdara-project\TEAM.md, LANES.md and AGENTS.md 
 ### Your lane
 - Owns: `nav.js`, `nav.css`, `nav-accessibility.js`, `nav-language.js`, `nav-pwa.js`, `nav-customer-search.js`, `sw.js`, `build.mjs` (performance only), manifest/PWA files.
 - index.html areas: header/top bar, desktop sidebar, mobile drawer, bottom nav, More menu, speed dial (`#mobileSpeedDial`), global search, language toggle.
-- Integrates with `screen-router.js` through its public hooks (`updateNavActive`, `data-screen` on body); changes inside `screen-router.js` -> `lane:grok` issue.
+- Integrates with `screen-router.js` through its public hooks (`updateNavActive`, `data-screen` on body); changes inside `screen-router.js` -> `lane:agent4` issue.
 - Issues: #285 bottom nav highlights Home on Backup / Settings / Owner Assistant + the + button covers the More menu, #280 leftovers (nav polish), any nav highlight bug, #228 Urdu mode (nav-language.js and labels), #219 performance (bundle / lazy-load in build.mjs + sw.js; no index.html restructuring of other lanes' blocks).
 
 ## HARD SCOPE RULE (added 2026-10-17, overrides older ideas in STATE files)
@@ -30,7 +30,7 @@ Shared rules: C:\Users\Perfect\shahdara-project\TEAM.md, LANES.md and AGENTS.md 
 ## Your area: MOBILE FLOWS FOR THE OWNER AND FIELD COLLECTORS + NAVIGATION
 - Phone-first layout, header, bottom nav, drawer/More sheet, fast flows for collecting money in the field, accessibility.
 - Reuse existing billing/payment/receipt functions (core.js, app.js, receipt.js, form-validation.js) by CALLING them; do not edit them (Grok/agent3 lanes). Never invent data; a receipt is created only after the user confirms.
-- Quick Collect, quick profile and customer screens are Grok-owned now: backlog items 1, 3, 5 below only via `lane:grok` issues; continue with nav/header/drawer/More/bottom-nav/PWA/Urdu/performance items.
+- Quick Collect, quick profile and customer screens are agent4-owned (ex-Grok) now: backlog items 1, 3, 5 below only via `lane:agent4` issues; continue with nav/header/drawer/More/bottom-nav/PWA/Urdu/performance items.
 - Do NOT change dashboard cards/charts (agent1) or forms/receipt internals beyond wiring (agent3).
 
 ## BACKLOG (prioritized; each item = one substantial 20+ min feature with UI, wiring to existing data/storage, dark/light theme, mobile layout, empty states and tests)

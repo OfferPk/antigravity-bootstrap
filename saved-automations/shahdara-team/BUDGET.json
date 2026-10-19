@@ -1,0 +1,18 @@
+{
+  "mode": "budget",
+  "note": "Budget mode (John, 2026-10-19): spread the Antigravity quota until the Oct 21 refresh. Gate-owned counters: date, turnsToday, orderIndex, lastRun*. John may edit maxPerDay, minGapMinutes, until, order, models. Delete this file (or let 'until' pass) for the normal cadence.",
+  "untilDate": "2026-10-21",
+  "until": "2026-10-21T12:30:00+05:00",
+  "maxPerDay": 4,
+  "minGapMinutes": 240,
+  "turnCapMinutes": 45,
+  "order": ["agent1", "agent3", "agent2", "agent4", "agent1", "agent3", "agent2"],
+  "models": { "agent4": "flash_lite" },
+  "date": "2026-10-19",
+  "turnsToday": 0,
+  "orderIndex": 0,
+  "lastRunStart": null,
+  "lastRunConv": null,
+  "lastRunAgent": null,
+  "lastRunRolledBack": false
+}
