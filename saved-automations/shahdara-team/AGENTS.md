@@ -7,7 +7,7 @@
 - Before building, search the code (rg) for an existing version of the feature. If it exists, extend and improve it instead of creating a duplicate.
 - Take tasks from your TASK.md backlog in order (top first). STATE "NEXT" ideas about network engineering are void.
 - ONLY project: OfferPk/shahdara-isp-billing (https://github.com/OfferPk/shahdara-isp-billing).
-- SOLO MODE (since 2026-10-18, John): only agent4 runs, every turn. agent1, agent2, agent3 are PAUSED (do not run them, do not touch their folders/branches). The old 6-slot rotation (agent1 -> agent4 -> agent2 -> agent4 -> agent3 -> agent4) is paused; see TEAM.md. Agents:
+- TEAM MODE (since 2026-10-19, John): the 4 agents take turns ONE AT A TIME in a sequential rotation agent1 -> agent2 -> agent3 -> agent4 -> agent1 (see TEAM.md; TEAM.lock heartbeat). LANE RULE: each agent edits ONLY the files/areas of its own lane (C:\Users\Perfect\shahdara-project\LANES.md); a change in another lane's file or a Grok-owned module (customer-plan.js, customer-import*.js, bulk-collect.*, screen-router.*, ui-feedback.* toast/confirm, payments-list.*, receipt.js ...) = open a GitHub issue labeled lane:agentN / lane:grok instead. Always git fetch + git rebase origin/main before opening the PR and again before merging. Agents:
   - agent1 shahdara-dashboard  -> C:\Users\Perfect\shahdara-project\agent1\shahdara-isp-billing (branches feat/dash-*)
   - agent2 shahdara-mobile-nav -> C:\Users\Perfect\shahdara-project\agent2\shahdara-isp-billing (branches feat/nav-*)
   - agent3 shahdara-forms-qa   -> C:\Users\Perfect\shahdara-project\agent3\shahdara-isp-billing (branches feat/qa-*)
