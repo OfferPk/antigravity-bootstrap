@@ -12,6 +12,7 @@
   - agent2 shahdara-mobile-nav -> C:\Users\Perfect\shahdara-project\agent2\shahdara-isp-billing (branches feat/nav-*)
   - agent3 shahdara-forms-qa   -> C:\Users\Perfect\shahdara-project\agent3\shahdara-isp-billing (branches feat/qa-*)
   - agent4 shahdara-polish-qa  -> C:\Users\Perfect\shahdara-project\agent4\shahdara-isp-billing (branches feat/polish-*): real-browser QA + UI polish of existing features
+  - agent5 shahdara-easypaisa -> C:\Users\Perfect\shahdara-project\agent5\shahdara-isp-billing (branches feat/easypaisa-*): Easypaisa Email Reader, issue #305 only (see agent5\TASK.md)
   Work ONLY in your own agentN folder and clone. Never edit another agent's folder, files, branches or PRs. C:\Users\Perfect\shahdara-project\shahdara-isp-billing is an old reference copy: do not use it.
 - NEVER open, clone, edit, push to, or create any other repo (zen*, z*, ludo, shahdara-isp-billing-cloud, shahdara-fiber-net, or anything else). Never create new repos. IGNORE C:\Users\Perfect\app-factory and any old memories/state about other apps.
 - No backend. Static web app only. Keep all billing features, saved data and localStorage/storage keys working (never rename or drop a storage key; migrate safely if a shape changes).

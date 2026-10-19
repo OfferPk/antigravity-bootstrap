@@ -13,7 +13,7 @@
 #
 # BUDGET MODE (2026-10-19, John): while BUDGET.json is active (now < "until"), the gate
 #  - starts at most maxPerDay runs per local day and waits minGapMinutes between run starts,
-#  - picks the agent itself from BUDGET.json "order" (writes NEXT_AGENT.txt) and passes the
+#  - picks the agent itself from BUDGET.json "order" (skipping agentN with DONE.txt; writes NEXT_AGENT.txt) and passes the
 #    per-agent model from "models" (e.g. agent4 = flash_lite),
 #  - prepends BUDGET_PROMPT.txt (ONE focused issue, 45-min cap, then end) to TEAM_PROMPT.txt.
 # A run that dies on 429 is not counted. After "until" the normal cadence returns automatically.
@@ -172,8 +172,13 @@ if ($budgetOn) {
     }
   }
   $order = @($budget.order)
-  $budgetAgent = [string]$order[[int]$budget.orderIndex % $order.Count]
-  $slot = @{ agent1 = 1; agent2 = 2; agent3 = 3; agent4 = 4 }[$budgetAgent]
+  # Skip agents whose dedicated job is finished (agentN\DONE.txt, e.g. agent5 after issue #305 is merged).
+  for ($k = 0; $k -lt $order.Count; $k++) {
+    $budgetAgent = [string]$order[[int]$budget.orderIndex % $order.Count]
+    if (-not (Test-Path (Join-Path $root "$budgetAgent\DONE.txt"))) { break }
+    Set-BudgetField $budget 'orderIndex' ([int]$budget.orderIndex + 1)
+  }
+  $slot = @{ agent1 = 1; agent2 = 2; agent3 = 3; agent4 = 4; agent5 = 5 }[$budgetAgent]
   if (-not $slot) { Log "ERROR: BUDGET.json order has unknown agent '$budgetAgent'"; exit 1 }
   Set-Content -Path (Join-Path $root 'NEXT_AGENT.txt') -Value ("{0} {1}" -f $slot, $budgetAgent) -Encoding ASCII
 }
